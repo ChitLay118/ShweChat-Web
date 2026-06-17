@@ -64,25 +64,21 @@
       overflow: hidden;
     }
 
-    /* Screen Management */
+    /* Screen Management (Using display for 100% WebView Compatibility) */
     .screen {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      display: flex;
+      display: none; /* Changed to none for perfect transition without overlay clicks */
       flex-direction: column;
       background-color: var(--bg-color);
       z-index: 10;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
     }
 
     .screen.active {
-      opacity: 1;
-      pointer-events: auto;
+      display: flex; /* Pure standard block showing */
       z-index: 20;
     }
 
@@ -961,6 +957,7 @@
     let activeChatsSnapshotUnsubscribe = null;
     let activeFriendsSnapshotUnsubscribe = null;
     let activeRoomMessagesUnsubscribe = null;
+    let activeUserDocUnsubscribe = null;
 
     // Toast logic implementation (Safer inside iframe containers)
     function showToast(message) {
@@ -1111,9 +1108,17 @@
         return;
       }
 
+      // Add loading indicator on button
+      const submitBtn = document.getElementById("auth-submit-btn");
+      const originalText = submitBtn.innerText;
+      submitBtn.innerText = "Processing...";
+      submitBtn.disabled = true;
+
       if (authMode === "register") {
         if (!name) {
           showToast("Name field is required.");
+          submitBtn.innerText = originalText;
+          submitBtn.disabled = false;
           return;
         }
 
@@ -1135,6 +1140,8 @@
           })
           .catch((error) => {
             showToast(error.message);
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
           });
 
       } else {
@@ -1145,34 +1152,60 @@
           })
           .catch((error) => {
             showToast(error.message);
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
           });
       }
     });
 
-    // Session State Listener hook
+    // Session State Listener hook (OPTIMIZED FOR NO-LAG TRANSITION)
     auth.onAuthStateChanged((user) => {
-      if (user) {
-        // Sync local app session data
-        db.collection("Users").doc(user.uid).get()
-          .then((doc) => {
-            if (doc.exists) {
-              currentUserData = doc.data();
-              // Update local profile displays
-              document.getElementById("profile-name-val").innerText = currentUserData.name;
-              document.getElementById("profile-email-val").innerText = currentUserData.email;
-              document.getElementById("profile-uid-val").innerText = currentUserData.uid;
-              document.getElementById("profile-avatar-circle").innerText = currentUserData.name.charAt(0).toUpperCase();
+      // Clean up dynamic processing state on UI button
+      const submitBtn = document.getElementById("auth-submit-btn");
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = authMode === "register" ? "Register Now" : "Login";
+      }
 
-              // Initialize Real-time Subscriptions
-              startRealtimeListeners(user.uid);
-              
-              // Hide Auth, display dynamic UI
-              document.getElementById("main-nav-bar").style.display = "flex";
-              switchNavTab("chats");
-            } else {
-              showToast("Account metadata missing inside Firestore records.");
-            }
-          });
+      if (user) {
+        // Step 1: Transition UI immediately without waiting for database read (Resolves Login Stuck)
+        document.getElementById("main-nav-bar").style.display = "flex";
+        switchNavTab("chats");
+
+        // Step 2: Bind a real-time listener for User profile and handle dynamic fallback
+        if (activeUserDocUnsubscribe) activeUserDocUnsubscribe();
+
+        activeUserDocUnsubscribe = db.collection("Users").doc(user.uid).onSnapshot((doc) => {
+          if (doc.exists) {
+            currentUserData = doc.data();
+          } else {
+            // Safe fallback schema structure for race-condition during register process
+            const defaultName = user.displayName || user.email.split('@')[0];
+            currentUserData = {
+              uid: user.uid,
+              name: defaultName,
+              email: user.email.toLowerCase(),
+              profilePic: "",
+              fcmToken: ""
+            };
+            // Safely write standard user model in background
+            db.collection("Users").doc(user.uid).set(currentUserData, { merge: true });
+          }
+
+          // Step 3: Populate dynamic values securely
+          document.getElementById("profile-name-val").innerText = currentUserData.name || "User";
+          document.getElementById("profile-email-val").innerText = currentUserData.email || user.email;
+          document.getElementById("profile-uid-val").innerText = currentUserData.uid;
+          document.getElementById("profile-avatar-circle").innerText = (currentUserData.name || "U").charAt(0).toUpperCase();
+
+          // Initialize Real-time Subscriptions for friends & chats
+          startRealtimeListeners(user.uid);
+        }, (error) => {
+          console.error("Dynamic User document sync failed.", error);
+          // Network recovery backup triggers
+          startRealtimeListeners(user.uid);
+        });
+
       } else {
         // User is logged out. Cleanup subscriptions, show Auth screen
         currentUserData = null;
@@ -1231,6 +1264,10 @@
       if (activeRoomMessagesUnsubscribe) {
         activeRoomMessagesUnsubscribe();
         activeRoomMessagesUnsubscribe = null;
+      }
+      if (activeUserDocUnsubscribe) {
+        activeUserDocUnsubscribe();
+        activeUserDocUnsubscribe = null;
       }
     }
 
@@ -1327,6 +1364,7 @@
       });
     }
 
+    // Global User search dialog
     function openSearchModal() {
       openGlobalModal("Search User", "Search by registered Gmail", "Go Chat", (emailInput) => {
         const email = emailInput.trim().toLowerCase();
