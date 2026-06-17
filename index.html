@@ -1,23 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
   <meta charset="UTF-8">
-  <!-- Crucial for Mobile App / WebView fitting without zooming issues -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>ShweChat</title>
   
-  <!-- Inter Google Font -->
+  <!-- Inter & Padauk (မြန်မာစာအတွက် အကောင်းဆုံး Font) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Padauk:wght@400;700&display=swap" rel="stylesheet">
   
-  <!-- FontAwesome Icons for Beautiful Telegram-style UI -->
+  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- CSS Styling -->
   <style>
     :root {
-      --primary-color: #2481cc; /* Elegant Telegram Blue */
+      --primary-color: #2481cc; /* Telegram Blue */
       --primary-dark: #1d71b3;
       --bg-color: #f0f2f5;
       --card-bg: #ffffff;
@@ -37,7 +35,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', 'Padauk', sans-serif;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
@@ -53,40 +51,46 @@
       align-items: center;
     }
 
-    /* Container configured to fill Android WebView perfectly */
+    /* Main Container setup */
     #app-container {
       width: 100%;
       height: 100%;
-      background-color: var(--card-bg);
+      background-color: var(--bg-color);
       position: relative;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
-    /* Screen Management (Using display for 100% WebView Compatibility) */
+    /* Viewport Area */
+    #screen-viewport {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Screens setup */
     .screen {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      display: none; /* Changed to none for perfect transition without overlay clicks */
+      display: none;
       flex-direction: column;
       background-color: var(--bg-color);
-      z-index: 10;
     }
 
     .screen.active {
-      display: flex; /* Pure standard block showing */
-      z-index: 20;
+      display: flex;
     }
 
-    /* Common Header Styles */
+    /* Headers */
     .app-header {
       background-color: var(--primary-color);
       color: white;
-      padding: calc(16px + var(--safe-area-top)) 16px 16px 16px;
+      padding: calc(14px + var(--safe-area-top)) 16px 14px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -101,12 +105,6 @@
       letter-spacing: -0.5px;
     }
 
-    .app-header-actions {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-    }
-
     .header-btn {
       background: none;
       border: none;
@@ -119,80 +117,77 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background-color 0.2s;
     }
 
     .header-btn:active {
       background-color: rgba(255, 255, 255, 0.15);
     }
 
-    /* Auth Screen styling */
+    /* Premium login interface card */
     #auth-screen {
       background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
       justify-content: center;
       align-items: center;
       padding: 24px;
+      z-index: 99999; /* Ensure it stays completely on top during login */
     }
 
     .auth-card {
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.98);
       backdrop-filter: blur(10px);
       width: 100%;
-      max-width: 400px;
+      max-width: 360px;
       border-radius: 24px;
-      padding: 32px 24px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+      padding: 30px 24px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.3);
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
     }
 
     .auth-logo {
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .auth-logo i {
-      font-size: 48px;
+      font-size: 44px;
       color: var(--primary-color);
       margin-bottom: 8px;
     }
 
     .auth-logo h2 {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 700;
       color: #1e3c72;
     }
 
     .auth-logo p {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text-muted);
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      position: relative;
     }
 
     .form-group label {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       color: #5c6873;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     .form-group input {
       width: 100%;
-      padding: 12px 14px;
+      padding: 12px;
       border: 1.5px solid var(--border-color);
       border-radius: 12px;
       font-size: 15px;
       outline: none;
-      transition: border-color 0.2s;
       background-color: #fcfdfe;
     }
 
@@ -209,47 +204,45 @@
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-      margin-top: 8px;
       box-shadow: 0 4px 12px rgba(36, 129, 204, 0.3);
+      transition: all 0.2s;
     }
 
-    .auth-btn:active {
-      background-color: var(--primary-dark);
-      transform: scale(0.98);
+    .auth-btn:disabled {
+      background-color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
     }
 
     .auth-toggle-link {
       text-align: center;
-      font-size: 14px;
+      font-size: 13px;
       color: var(--primary-color);
       cursor: pointer;
       font-weight: 500;
     }
 
-    /* Main Screens layout with Navigation */
+    /* Screen Inner Contents */
     .main-screen-content {
       flex: 1;
       overflow-y: auto;
       background-color: var(--bg-color);
-      padding-bottom: calc(72px + var(--safe-area-bottom));
+      padding-bottom: 12px;
     }
 
-    /* Navigation Bar */
+    /* Bulletproof Bottom Navigation Fixed Placement */
     .bottom-nav {
-      position: absolute;
-      bottom: 0;
-      left: 0;
       width: 100%;
-      height: calc(64px + var(--safe-area-bottom));
+      height: calc(60px + var(--safe-area-bottom));
       background-color: #ffffff;
       border-top: 1px solid var(--border-color);
       display: flex;
       justify-content: space-around;
       align-items: center;
       padding-bottom: var(--safe-area-bottom);
-      z-index: 150;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+      z-index: 10000; /* Stays above screens completely */
+      box-shadow: 0 -3px 12px rgba(0,0,0,0.05);
+      flex-shrink: 0;
     }
 
     .nav-item {
@@ -261,12 +254,12 @@
       cursor: pointer;
       width: 33.33%;
       height: 100%;
-      transition: color 0.2s;
-      gap: 4px;
+      gap: 3px;
+      transition: color 0.15s ease;
     }
 
     .nav-item i {
-      font-size: 20px;
+      font-size: 18px;
     }
 
     .nav-item span {
@@ -278,21 +271,19 @@
       color: var(--primary-color);
     }
 
-    /* Chat List Structure */
+    /* Lists rendering */
     .list-container {
       display: flex;
       flex-direction: column;
-      padding: 8px 0;
     }
 
     .list-item {
       display: flex;
       align-items: center;
-      padding: 12px 16px;
+      padding: 14px 16px;
       background-color: var(--card-bg);
       border-bottom: 1px solid #f5f6f8;
       cursor: pointer;
-      transition: background-color 0.2s;
     }
 
     .list-item:active {
@@ -300,8 +291,8 @@
     }
 
     .avatar {
-      width: 50px;
-      height: 50px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
       background-color: var(--primary-color);
       color: white;
@@ -313,7 +304,6 @@
       margin-right: 14px;
       position: relative;
       flex-shrink: 0;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
     .avatar.online::after {
@@ -321,8 +311,8 @@
       position: absolute;
       bottom: 1px;
       right: 1px;
-      width: 12px;
-      height: 12px;
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
       background-color: var(--online-color);
       border: 2px solid white;
@@ -330,7 +320,7 @@
 
     .item-details {
       flex: 1;
-      min-width: 0; /* Prevents text overflow breaks */
+      min-width: 0;
     }
 
     .item-row {
@@ -341,7 +331,7 @@
     }
 
     .item-name {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       color: var(--text-main);
       white-space: nowrap;
@@ -362,10 +352,10 @@
       text-overflow: ellipsis;
     }
 
-    /* Floating Action Button for Adding Friends */
+    /* Floating Action Button (FAB) */
     .fab {
       position: absolute;
-      bottom: calc(80px + var(--safe-area-bottom));
+      bottom: 20px;
       right: 20px;
       width: 56px;
       height: 56px;
@@ -375,29 +365,26 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      font-size: 20px;
       box-shadow: 0 4px 16px rgba(36, 129, 204, 0.4);
       cursor: pointer;
-      z-index: 140;
-      transition: transform 0.1s, background-color 0.2s;
+      z-index: 999;
     }
 
     .fab:active {
-      transform: scale(0.92);
-      background-color: var(--primary-dark);
+      transform: scale(0.95);
     }
 
-    /* Chat Room Screen Specifics */
+    /* Chat Room Screen */
     #chat-room-screen {
-      background-color: #eae6df; /* Classic Telegram-like Background Tint */
-      background-image: radial-gradient(rgba(0,0,0,0.04) 15%, transparent 15%);
-      background-size: 16px 16px;
+      z-index: 15000; /* Stays fully on top of standard screens when open */
+      background-color: #e5ddd5;
     }
 
     .chat-room-header {
       background-color: var(--primary-color);
       color: white;
-      padding: calc(12px + var(--safe-area-top)) 12px 12px 12px;
+      padding: calc(10px + var(--safe-area-top)) 12px 10px 12px;
       display: flex;
       align-items: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -411,16 +398,11 @@
       background: none;
       border: none;
       padding: 8px;
-      margin-right: 8px;
+      margin-right: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 50%;
-    }
-
-    .back-btn:active {
-      background-color: rgba(255, 255, 255, 0.15);
     }
 
     .chat-header-info {
@@ -436,7 +418,7 @@
     }
 
     .chat-header-name {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       color: white;
       white-space: nowrap;
@@ -446,25 +428,22 @@
 
     .chat-header-status {
       font-size: 11px;
-      color: rgba(255, 255, 255, 0.85);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      color: rgba(255, 255, 255, 0.8);
     }
 
     .chat-room-actions {
       display: flex;
-      gap: 6px;
+      gap: 4px;
     }
 
-    /* Chat Messages Viewport */
+    /* Messages Area */
     .chat-messages-area {
       flex: 1;
       overflow-y: auto;
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .message-row {
@@ -482,25 +461,25 @@
 
     .message-bubble {
       max-width: 75%;
-      padding: 10px 14px;
-      border-radius: 18px;
-      font-size: 15px;
+      padding: 8px 12px;
+      border-radius: 16px;
+      font-size: 14px;
       line-height: 1.4;
       position: relative;
       word-wrap: break-word;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
 
     .message-row.sent .message-bubble {
       background-color: var(--bubble-sent);
       color: var(--bubble-sent-text);
-      border-top-right-radius: 4px;
+      border-top-right-radius: 2px;
     }
 
     .message-row.received .message-bubble {
       background-color: var(--bubble-received);
       color: var(--bubble-received-text);
-      border-top-left-radius: 4px;
+      border-top-left-radius: 2px;
     }
 
     .message-timestamp {
@@ -511,7 +490,7 @@
       margin-top: 4px;
     }
 
-    /* Input Bar */
+    /* Input Tray */
     .chat-input-bar {
       background-color: var(--card-bg);
       border-top: 1px solid var(--border-color);
@@ -527,15 +506,9 @@
       border: 1px solid var(--border-color);
       border-radius: 20px;
       padding: 10px 16px;
-      font-size: 15px;
+      font-size: 14px;
       outline: none;
       background-color: #f8f9fa;
-      transition: border-color 0.2s, background-color 0.2s;
-    }
-
-    .chat-input:focus {
-      border-color: var(--primary-color);
-      background-color: white;
     }
 
     .send-btn {
@@ -549,21 +522,14 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.2s, transform 0.1s;
     }
 
-    .send-btn:active {
-      background-color: var(--primary-dark);
-      transform: scale(0.92);
-    }
-
-    /* Profile View Layout */
+    /* Profile view */
     .profile-card {
       background-color: var(--card-bg);
       margin: 16px;
       border-radius: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
       padding: 24px;
       display: flex;
       flex-direction: column;
@@ -572,17 +538,16 @@
     }
 
     .profile-avatar {
-      width: 100px;
-      height: 100px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       background-color: var(--primary-color);
       color: white;
-      font-size: 38px;
+      font-size: 32px;
       font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 6px 15px rgba(36, 129, 204, 0.25);
     }
 
     .profile-info {
@@ -590,7 +555,6 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-top: 12px;
     }
 
     .profile-field {
@@ -606,11 +570,10 @@
     }
 
     .profile-field-value {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--text-main);
       font-weight: 500;
       margin-top: 4px;
-      word-break: break-all;
     }
 
     .logout-btn {
@@ -619,20 +582,14 @@
       border: none;
       border-radius: 12px;
       width: 100%;
-      padding: 14px;
-      font-size: 16px;
+      padding: 12px;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 12px;
-      box-shadow: 0 4px 12px rgba(244, 67, 54, 0.2);
-      transition: background-color 0.2s;
+      margin-top: 8px;
     }
 
-    .logout-btn:active {
-      background-color: #d32f2f;
-    }
-
-    /* Modal dialog (Standard overlay modal for user feedback/actions in WebView context) */
+    /* Dialog Modals */
     .modal-overlay {
       position: absolute;
       top: 0;
@@ -640,41 +597,31 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
-      z-index: 200;
-      display: flex;
+      z-index: 999999;
+      display: none;
       justify-content: center;
       align-items: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
       padding: 24px;
     }
 
     .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
+      display: flex;
     }
 
     .modal-box {
       background-color: white;
       border-radius: 20px;
-      padding: 24px;
+      padding: 20px;
       width: 100%;
-      max-width: 320px;
+      max-width: 300px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      transform: translateY(10px);
-      transition: transform 0.25s ease;
-    }
-
-    .modal-overlay.active .modal-box {
-      transform: translateY(0);
+      gap: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
 
     .modal-title {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       color: var(--text-main);
     }
@@ -685,10 +632,7 @@
       border: 1px solid var(--border-color);
       border-radius: 8px;
       outline: none;
-    }
-
-    .modal-input:focus {
-      border-color: var(--primary-color);
+      font-size: 14px;
     }
 
     .modal-actions {
@@ -703,7 +647,7 @@
       border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .modal-btn.cancel {
@@ -716,36 +660,33 @@
       color: white;
     }
 
-    /* Custom Toast Notification inside WebView */
+    /* Bulletproof Self-Cleaning Toast System styling */
     .toast {
       position: absolute;
       bottom: 80px;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
-      background-color: rgba(28, 36, 52, 0.9);
+      background-color: rgba(28, 36, 52, 0.95);
       color: white;
       padding: 10px 20px;
       border-radius: 20px;
       font-size: 13px;
       font-weight: 500;
-      z-index: 300;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000000; /* Must stay on top of everything */
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+      opacity: 0;
+      display: none;
       white-space: nowrap;
       pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
 
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* Empty state info graphics style */
     .empty-state {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 300px;
+      height: 260px;
       color: var(--text-muted);
       gap: 12px;
       text-align: center;
@@ -753,126 +694,129 @@
     }
 
     .empty-state i {
-      font-size: 48px;
+      font-size: 40px;
       color: var(--border-color);
     }
 
     .empty-state p {
-      font-size: 14px;
+      font-size: 13px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Full App Holder -->
   <div id="app-container">
 
-    <!-- Toast UI System -->
-    <div id="toast-notif" class="toast">Action completed successfully</div>
+    <!-- Self-Cleaning Toast Element -->
+    <div id="toast-notif" class="toast">အောင်မြင်ပါသည်</div>
 
-    <!-- 1. AUTH SCREEN (SPA Screen 1) -->
+    <!-- 1. AUTH SCREEN -->
     <div id="auth-screen" class="screen active">
       <div class="auth-card">
         <div class="auth-logo">
           <i class="fa-solid fa-comments"></i>
-          <h2 id="auth-title">Welcome to ShweChat</h2>
-          <p id="auth-subtitle">Connect and collaborate elegantly</p>
+          <h2 id="auth-title">ShweChat မှ ကြိုဆိုပါသည်</h2>
+          <p id="auth-subtitle">အကောင့်ဝင်ရောက်ပြီး စကားပြောဆိုလိုက်ပါ</p>
         </div>
 
         <div class="form-group" id="reg-name-group" style="display: none;">
-          <label>Full Name</label>
-          <input type="text" id="auth-name" placeholder="Enter your full name">
+          <label>နာမည်အပြည့်အစုံ</label>
+          <input type="text" id="auth-name" placeholder="နာမည်ရေးရန်">
         </div>
 
         <div class="form-group">
-          <label>Gmail Address</label>
+          <label>ဂျီမေးလ်လိပ်စာ (Gmail)</label>
           <input type="email" id="auth-email" placeholder="example@gmail.com">
         </div>
 
         <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="auth-password" placeholder="At least 6 characters">
+          <label>လျှို့ဝှက်နံပါတ် (Password)</label>
+          <input type="password" id="auth-password" placeholder="အနည်းဆုံး ၆ လုံး">
         </div>
 
-        <button class="auth-btn" id="auth-submit-btn">Login</button>
-        <div class="auth-toggle-link" id="auth-toggle-btn">Don't have an account? Register</div>
+        <button class="auth-btn" id="auth-submit-btn">အကောင့်ဝင်ရန်</button>
+        <div class="auth-toggle-link" id="auth-toggle-btn">အကောင့်အသစ်ဖွင့်ရန်နှိပ်ပါ</div>
       </div>
     </div>
 
-    <!-- 2. HOME CHATS SCREEN (SPA Screen 2) -->
-    <div id="chats-screen" class="screen">
-      <header class="app-header">
-        <h1>ShweChat</h1>
-        <div class="app-header-actions">
-          <button class="header-btn" onclick="openSearchModal()"><i class="fa-solid fa-magnifying-glass"></i></button>
-        </div>
-      </header>
+    <!-- SCREEN VIEWPORT -->
+    <div id="screen-viewport">
 
-      <div class="main-screen-content">
-        <div id="chats-list" class="list-container">
-          <!-- Dynamic Chats injection -->
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. FRIENDS SCREEN (SPA Screen 3) -->
-    <div id="friends-screen" class="screen">
-      <header class="app-header">
-        <h1>Friends</h1>
-        <div class="app-header-actions">
-          <button class="header-btn" onclick="openAddFriendModal()"><i class="fa-solid fa-user-plus"></i></button>
-        </div>
-      </header>
-
-      <div class="main-screen-content">
-        <div id="friends-list" class="list-container">
-          <!-- Dynamic Friends list injection -->
-        </div>
-      </div>
-
-      <!-- Floating Action Button for prompt action (Adds friend) -->
-      <div class="fab" onclick="openAddFriendModal()">
-        <i class="fa-solid fa-user-plus"></i>
-      </div>
-    </div>
-
-    <!-- 4. PROFILE SCREEN (SPA Screen 4) -->
-    <div id="profile-screen" class="screen">
-      <header class="app-header">
-        <h1>My Profile</h1>
-      </header>
-
-      <div class="main-screen-content">
-        <div class="profile-card">
-          <div id="profile-avatar-circle" class="profile-avatar">U</div>
-          <div class="profile-info">
-            <div class="profile-field">
-              <div class="profile-field-label">Name</div>
-              <div id="profile-name-val" class="profile-field-value">Your Name</div>
-            </div>
-            <div class="profile-field">
-              <div class="profile-field-label">Gmail</div>
-              <div id="profile-email-val" class="profile-field-value">yourname@gmail.com</div>
-            </div>
-            <div class="profile-field">
-              <div class="profile-field-label">User UID</div>
-              <div id="profile-uid-val" class="profile-field-value">No UID Connected</div>
-            </div>
+      <!-- 2. CHATS TAB -->
+      <div id="chats-screen" class="screen">
+        <header class="app-header">
+          <h1>ShweChat</h1>
+          <div class="app-header-actions">
+            <button class="header-btn" onclick="openSearchModal()"><i class="fa-solid fa-magnifying-glass"></i></button>
           </div>
-          <button class="logout-btn" onclick="handleLogout()">Logout</button>
+        </header>
+
+        <div class="main-screen-content">
+          <div id="chats-list" class="list-container">
+            <!-- Recent Chats injection -->
+          </div>
         </div>
       </div>
+
+      <!-- 3. FRIENDS TAB -->
+      <div id="friends-screen" class="screen">
+        <header class="app-header">
+          <h1>သူငယ်ချင်းများ</h1>
+          <div class="app-header-actions">
+            <button class="header-btn" onclick="openAddFriendModal()"><i class="fa-solid fa-user-plus"></i></button>
+          </div>
+        </header>
+
+        <div class="main-screen-content">
+          <div id="friends-list" class="list-container">
+            <!-- Friends List injection -->
+          </div>
+        </div>
+
+        <div class="fab" onclick="openAddFriendModal()">
+          <i class="fa-solid fa-user-plus"></i>
+        </div>
+      </div>
+
+      <!-- 4. PROFILE TAB -->
+      <div id="profile-screen" class="screen">
+        <header class="app-header">
+          <h1>ကျွန်ုပ်၏ အကောင့်</h1>
+        </header>
+
+        <div class="main-screen-content">
+          <div class="profile-card">
+            <div id="profile-avatar-circle" class="profile-avatar">U</div>
+            <div class="profile-info">
+              <div class="profile-field">
+                <div class="profile-field-label">နာမည်</div>
+                <div id="profile-name-val" class="profile-field-value">-</div>
+              </div>
+              <div class="profile-field">
+                <div class="profile-field-label">ဂျီမေးလ်</div>
+                <div id="profile-email-val" class="profile-field-value">-</div>
+              </div>
+              <div class="profile-field">
+                <div class="profile-field-label">အသုံးပြုသူနံပါတ် (UID)</div>
+                <div id="profile-uid-val" class="profile-field-value">-</div>
+              </div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">အကောင့်ထွက်ရန်</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- 5. CHAT ROOM SCREEN (Fully layered popup style backnav architecture) -->
+    <!-- 5. CHAT ROOM SCREEN -->
     <div id="chat-room-screen" class="screen">
       <header class="chat-room-header">
         <button class="back-btn" onclick="exitChatRoom()"><i class="fa-solid fa-arrow-left"></i></button>
         <div class="chat-header-info">
-          <div id="chat-active-avatar" class="avatar" style="width: 38px; height: 38px; margin-right: 0; font-size: 14px;">C</div>
+          <div id="chat-active-avatar" class="avatar" style="width: 36px; height: 36px; margin-right: 0; font-size: 14px;">C</div>
           <div class="chat-header-meta">
-            <div id="chat-active-name" class="chat-header-name">Loading...</div>
-            <div id="chat-active-status" class="chat-header-status">online</div>
+            <div id="chat-active-name" class="chat-header-name">မသိသေးပါ...</div>
+            <div id="chat-active-status" class="chat-header-status">အွန်လိုင်း</div>
           </div>
         </div>
         <div class="chat-room-actions">
@@ -881,56 +825,51 @@
         </div>
       </header>
 
-      <!-- Message Bubbles container -->
-      <div class="chat-messages-area" id="chat-messages-container">
-        <!-- Render realtime message bubbles here -->
-      </div>
+      <div class="chat-messages-area" id="chat-messages-container"></div>
 
-      <!-- Message sender interaction tray -->
       <div class="chat-input-bar">
-        <input type="text" id="chat-message-input" class="chat-input" placeholder="Type a message..." autocomplete="off">
+        <input type="text" id="chat-message-input" class="chat-input" placeholder="စာတိုရေးရန်..." autocomplete="off">
         <button class="send-btn" onclick="sendActiveMessage()"><i class="fa-solid fa-paper-plane"></i></button>
       </div>
     </div>
 
-    <!-- SHARED NAVIGATION SYSTEM -->
+    <!-- BOTTOM NAVIGATION -->
     <nav class="bottom-nav" id="main-nav-bar" style="display: none;">
       <div class="nav-item active" onclick="switchNavTab('chats')" id="nav-chats">
         <i class="fa-solid fa-message"></i>
-        <span>Chats</span>
+        <span>မက်ဆေ့ခ်ျ</span>
       </div>
       <div class="nav-item" onclick="switchNavTab('friends')" id="nav-friends">
         <i class="fa-solid fa-users"></i>
-        <span>Friends</span>
+        <span>သူငယ်ချင်း</span>
       </div>
       <div class="nav-item" onclick="switchNavTab('profile')" id="nav-profile">
         <i class="fa-solid fa-user"></i>
-        <span>Profile</span>
+        <span>ကျွန်ုပ်</span>
       </div>
     </nav>
 
-    <!-- GENERIC MODAL dialog structure -->
+    <!-- GENERIC MODAL OVERLAY -->
     <div class="modal-overlay" id="global-modal">
       <div class="modal-box">
-        <div class="modal-title" id="modal-box-title">Add New Friend</div>
-        <input type="text" id="modal-box-input" class="modal-input" placeholder="Enter value">
+        <div class="modal-title" id="modal-box-title">သူငယ်ချင်းအသစ်ထည့်မည်</div>
+        <input type="text" id="modal-box-input" class="modal-input" placeholder="">
         <div class="modal-actions">
-          <button class="modal-btn cancel" onclick="closeGlobalModal()">Cancel</button>
-          <button class="modal-btn confirm" id="modal-box-action-btn">Action</button>
+          <button class="modal-btn cancel" onclick="closeGlobalModal()">မလုပ်တော့ပါ</button>
+          <button class="modal-btn confirm" id="modal-box-action-btn">အတည်ပြုမည်</button>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Firebase SDK dependencies v8 (Required by spec) -->
+  <!-- Firebase Legacy SDK v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  <!-- Dynamic Application Scripting logic -->
   <script>
-    // HARDCODED FIREBASE INITIALIZATION CONFIG
+    // FIREBASE HARDCODED CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyD355MSuzGQ70An7M7rdG8APTqk-xtgFoM",
       authDomain: "shwechatmm.firebaseapp.com",
@@ -940,36 +879,60 @@
       appId: "1:904518107602:android:89231af7657c3ded44880b"
     };
 
-    // Instantiate Firebase instance safely
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // STRICT STORAGE APP PATHS (RULE 1 Compliance)
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'shwechatmm';
+
     // Application state
     let currentUserData = null;
     let activeChatTarget = null;
-    let authMode = "login"; // "login" or "register"
+    let authMode = "login";
     let currentNavTab = "chats";
 
-    // Firestore Observers listeners stack for clean SPA lifecycle
+    // Firestore streams references
     let activeChatsSnapshotUnsubscribe = null;
     let activeFriendsSnapshotUnsubscribe = null;
     let activeRoomMessagesUnsubscribe = null;
-    let activeUserDocUnsubscribe = null;
 
-    // Toast logic implementation (Safer inside iframe containers)
+    // Bulletproof Self-Cleaning Toast System
+    let toastTimeout = null;
+    let toastHideTimeout = null;
+    
     function showToast(message) {
       const toast = document.getElementById("toast-notif");
       toast.innerText = message;
-      toast.classList.add("show");
-      setTimeout(() => {
-        toast.classList.remove("show");
+      
+      // Clear any pending timeouts
+      if (toastTimeout) clearTimeout(toastTimeout);
+      if (toastHideTimeout) clearTimeout(toastHideTimeout);
+
+      // Instantly make it active
+      toast.style.display = "block";
+      // Force layout reflow to ensure transition registers
+      toast.offsetHeight; 
+      
+      toast.style.opacity = "1";
+      toast.style.transform = "translateX(-50%) translateY(0)";
+
+      // Setup clean fade out
+      toastTimeout = setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(-50%) translateY(100px)";
+        
+        toastHideTimeout = setTimeout(() => {
+          if (toast.style.opacity === "0") {
+            toast.style.display = "none";
+          }
+        }, 300);
       }, 3000);
     }
 
-    // Modal Manager
+    // Modal dialogs setup
     function openGlobalModal(title, placeholder, confirmBtnText, onConfirmCallback) {
       const overlay = document.getElementById("global-modal");
       const titleEl = document.getElementById("modal-box-title");
@@ -981,8 +944,6 @@
       inputEl.value = "";
       actionBtn.innerText = confirmBtnText;
 
-      // Unbind previous onclick
-      actionBtn.onclick = null;
       actionBtn.onclick = () => {
         onConfirmCallback(inputEl.value);
         closeGlobalModal();
@@ -995,23 +956,22 @@
       document.getElementById("global-modal").classList.remove("active");
     }
 
-    // Android Hybrid Bridge Interface Declarations & Triggers
+    // Android Native Bridge bindings
     function initiateBridgeCall(type) {
       if (!activeChatTarget) return;
       const targetUid = activeChatTarget.uid;
       const targetName = activeChatTarget.name;
 
-      showToast(`Initiating ${type} call to ${targetName}...`);
+      showToast(`${targetName} ထံ ဖုန်းခေါ်ဆိုနေပါသည်...`);
       
-      // Native interface wrapper execution
       if (window.Android && typeof window.Android.startCall === 'function') {
         try {
           window.Android.startCall(targetUid, type, targetName);
         } catch (e) {
-          console.error("Android startCall Bridge failed", e);
+          console.error("Bridge failure:", e);
         }
       } else {
-        console.warn("Android Bridge API: 'startCall' was invoked manually, Native endpoint interface is inactive outside Android Device environments.");
+        console.warn("Android startCall invoked (No Native interface detected).");
       }
     }
 
@@ -1021,32 +981,25 @@
         try {
           window.Android.sendNoti(targetToken, senderName, message);
         } catch (e) {
-          console.error("Android sendNoti Bridge failed", e);
+          console.error("Bridge notification failure:", e);
         }
       } else {
-        console.warn("Android Notification Bridge API invoked - token: " + targetToken);
+        console.log("FCM Notification routed:", targetToken);
       }
     }
 
-    // Public Native Interface updates receiver
+    // Global hook for Java Android bridge input integration
     window.updateFCMToken = function(token) {
       const user = auth.currentUser;
       if (user) {
-        db.collection("Users").doc(user.uid).update({
-          fcmToken: token
-        })
-        .then(() => {
-          showToast("FCM Token updated via Native Integration.");
-        })
-        .catch(err => {
-          console.error("Token update failed", err);
-        });
-      } else {
-        console.warn("FCM Token update caught, but no Active authenticated user was detected.");
+        const userRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Users').doc(user.uid);
+        userRef.update({ fcmToken: token })
+          .then(() => showToast("FCM Token ကို အောင်မြင်စွာ ချိတ်ဆက်ပြီးပါပြီ"))
+          .catch(err => console.error("FCM integration error", err));
       }
     };
 
-    // UI screen switches
+    // Screens transitions helper
     function showScreen(screenId) {
       document.querySelectorAll(".screen").forEach(screen => {
         screen.classList.remove("active");
@@ -1054,15 +1007,15 @@
       document.getElementById(screenId).classList.add("active");
     }
 
-    // Nav-bar controllers
+    // Nav bar controller
     function switchNavTab(tabName) {
       currentNavTab = tabName;
       document.querySelectorAll(".nav-item").forEach(item => {
         item.classList.remove("active");
       });
-      document.getElementById(`nav-${tabName}`).classList.add("active");
+      const navItem = document.getElementById(`nav-${tabName}`);
+      if (navItem) navItem.classList.add("active");
       
-      // Trigger SPA Layout toggles
       if (tabName === "chats") {
         showScreen("chats-screen");
       } else if (tabName === "friends") {
@@ -1072,7 +1025,7 @@
       }
     }
 
-    // Auth screen mode toggler
+    // Auth screen layout swapper
     document.getElementById("auth-toggle-btn").addEventListener("click", () => {
       const regNameGroup = document.getElementById("reg-name-group");
       const authTitle = document.getElementById("auth-title");
@@ -1083,175 +1036,188 @@
       if (authMode === "login") {
         authMode = "register";
         regNameGroup.style.display = "flex";
-        authTitle.innerText = "Join ShweChat";
-        authSubtitle.innerText = "Connect across networks instantly";
-        submitBtn.innerText = "Register Now";
-        toggleBtn.innerText = "Already have an account? Login";
+        authTitle.innerText = "အကောင့်အသစ်ဖွင့်ပါ";
+        authSubtitle.innerText = "သူငယ်ချင်းများနှင့် ချက်ချင်း စကားပြောလိုက်ပါ";
+        submitBtn.innerText = "အကောင့်ဖွင့်မည်";
+        toggleBtn.innerText = "အကောင့်ရှိပြီးသားလား? အကောင့်ဝင်ရန်နှိပ်ပါ";
       } else {
         authMode = "login";
         regNameGroup.style.display = "none";
-        authTitle.innerText = "Welcome to ShweChat";
-        authSubtitle.innerText = "Connect and collaborate elegantly";
-        submitBtn.innerText = "Login";
-        toggleBtn.innerText = "Don't have an account? Register";
+        authTitle.innerText = "ShweChat မှ ကြိုဆိုပါသည်";
+        authSubtitle.innerText = "အကောင့်ဝင်ရောက်ပြီး စကားပြောဆိုလိုက်ပါ";
+        submitBtn.innerText = "အကောင့်ဝင်ရန်";
+        toggleBtn.innerText = "အကောင့်အသစ်ဖွင့်ရန်နှိပ်ပါ";
       }
     });
 
-    // Sign In and Setup listeners
+    // Reset Auth Button State
+    function setAuthBtnLoading(isLoading, text) {
+      const submitBtn = document.getElementById("auth-submit-btn");
+      if (isLoading) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = text;
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.innerText = authMode === "login" ? "အကောင့်ဝင်ရန်" : "အကောင့်ဖွင့်မည်";
+      }
+    }
+
+    // Sign in executor
     document.getElementById("auth-submit-btn").addEventListener("click", () => {
       const email = document.getElementById("auth-email").value.trim();
       const password = document.getElementById("auth-password").value;
       const name = document.getElementById("auth-name").value.trim();
 
       if (!email || !password) {
-        showToast("Please fill all fields.");
+        showToast("အချက်အလက်များကို ဖြည့်သွင်းပေးပါရန်။");
         return;
       }
 
-      // Add loading indicator on button
-      const submitBtn = document.getElementById("auth-submit-btn");
-      const originalText = submitBtn.innerText;
-      submitBtn.innerText = "Processing...";
-      submitBtn.disabled = true;
+      setAuthBtnLoading(true, "ခေတ္တစောင့်ဆိုင်းပါ...");
 
       if (authMode === "register") {
         if (!name) {
-          showToast("Name field is required.");
-          submitBtn.innerText = originalText;
-          submitBtn.disabled = false;
+          showToast("နာမည် ထည့်သွင်းပေးပါရန်။");
+          setAuthBtnLoading(false);
           return;
         }
 
-        // Fire Email/Password Sign-up
         auth.createUserWithEmailAndPassword(email, password)
           .then((userCredential) => {
             const user = userCredential.user;
-            // Complete User node mapping structure inside Firestore DB "Users" Collection
-            return db.collection("Users").doc(user.uid).set({
+            return db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Users').doc(user.uid).set({
               uid: user.uid,
               name: name,
               email: email.toLowerCase(),
               profilePic: "", 
-              fcmToken: "" // Ready for Android Bridge injection updateFCMToken()
+              fcmToken: ""
             });
           })
           .then(() => {
-            showToast("Registration successful!");
+            showToast("အကောင့်ဖွင့်ခြင်း အောင်မြင်ပါသည်။");
           })
           .catch((error) => {
             showToast(error.message);
-            submitBtn.innerText = originalText;
-            submitBtn.disabled = false;
+            setAuthBtnLoading(false);
           });
 
       } else {
-        // Authenticating User Login
         auth.signInWithEmailAndPassword(email, password)
           .then(() => {
-            showToast("Welcome back to ShweChat!");
+            showToast("ကြိုဆိုပါသည်!");
           })
           .catch((error) => {
             showToast(error.message);
-            submitBtn.innerText = originalText;
-            submitBtn.disabled = false;
+            setAuthBtnLoading(false);
           });
       }
     });
 
-    // Session State Listener hook (OPTIMIZED FOR NO-LAG TRANSITION)
-    auth.onAuthStateChanged((user) => {
-      // Clean up dynamic processing state on UI button
-      const submitBtn = document.getElementById("auth-submit-btn");
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerText = authMode === "register" ? "Register Now" : "Login";
-      }
+    // Live update profile values
+    function updateProfileUI() {
+      if (!currentUserData) return;
+      document.getElementById("profile-name-val").innerText = currentUserData.name || "-";
+      document.getElementById("profile-email-val").innerText = currentUserData.email || "-";
+      document.getElementById("profile-uid-val").innerText = currentUserData.uid || "-";
+      document.getElementById("profile-avatar-circle").innerText = (currentUserData.name || "U").charAt(0).toUpperCase();
+    }
 
+    // Session status changes hook
+    auth.onAuthStateChanged((user) => {
       if (user) {
-        // Step 1: Transition UI immediately without waiting for database read (Resolves Login Stuck)
+        // INSTANT TRANSITION TO MAIN UI (Bypasses Firestore wait to prevent login getting stuck)
+        document.getElementById("auth-screen").classList.remove("active");
         document.getElementById("main-nav-bar").style.display = "flex";
         switchNavTab("chats");
+        setAuthBtnLoading(false);
 
-        // Step 2: Bind a real-time listener for User profile and handle dynamic fallback
-        if (activeUserDocUnsubscribe) activeUserDocUnsubscribe();
-
-        activeUserDocUnsubscribe = db.collection("Users").doc(user.uid).onSnapshot((doc) => {
-          if (doc.exists) {
-            currentUserData = doc.data();
-          } else {
-            // Safe fallback schema structure for race-condition during register process
-            const defaultName = user.displayName || user.email.split('@')[0];
+        // Fetch / Create User Node in Background
+        const userRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Users').doc(user.uid);
+        userRef.get()
+          .then((doc) => {
+            if (doc.exists) {
+              currentUserData = doc.data();
+              updateProfileUI();
+              startRealtimeListeners(user.uid);
+            } else {
+              // Build clean record instantly
+              const nameFallback = user.email ? user.email.split('@')[0] : "User";
+              const fallbackData = {
+                uid: user.uid,
+                name: nameFallback,
+                email: user.email ? user.email.toLowerCase() : "",
+                profilePic: "",
+                fcmToken: ""
+              };
+              userRef.set(fallbackData).then(() => {
+                currentUserData = fallbackData;
+                updateProfileUI();
+                startRealtimeListeners(user.uid);
+              }).catch(err => console.error("Database initialization failed:", err));
+            }
+          })
+          .catch((err) => {
+            console.error("Firestore loading error:", err);
+            // Standby mock profile if network restricts firestore
             currentUserData = {
               uid: user.uid,
-              name: defaultName,
-              email: user.email.toLowerCase(),
-              profilePic: "",
-              fcmToken: ""
+              name: user.email ? user.email.split('@')[0] : "User",
+              email: user.email || ""
             };
-            // Safely write standard user model in background
-            db.collection("Users").doc(user.uid).set(currentUserData, { merge: true });
-          }
-
-          // Step 3: Populate dynamic values securely
-          document.getElementById("profile-name-val").innerText = currentUserData.name || "User";
-          document.getElementById("profile-email-val").innerText = currentUserData.email || user.email;
-          document.getElementById("profile-uid-val").innerText = currentUserData.uid;
-          document.getElementById("profile-avatar-circle").innerText = (currentUserData.name || "U").charAt(0).toUpperCase();
-
-          // Initialize Real-time Subscriptions for friends & chats
-          startRealtimeListeners(user.uid);
-        }, (error) => {
-          console.error("Dynamic User document sync failed.", error);
-          // Network recovery backup triggers
-          startRealtimeListeners(user.uid);
-        });
-
+            updateProfileUI();
+            startRealtimeListeners(user.uid);
+          });
       } else {
-        // User is logged out. Cleanup subscriptions, show Auth screen
         currentUserData = null;
         stopRealtimeListeners();
-        
         document.getElementById("main-nav-bar").style.display = "none";
         showScreen("auth-screen");
+        document.getElementById("auth-screen").classList.add("active");
+        setAuthBtnLoading(false);
       }
     });
 
-    // Graceful Signout Event
+    // Sign out method
     function handleLogout() {
       auth.signOut()
-        .then(() => {
-          showToast("Signed out successfully.");
-        })
-        .catch(err => {
-          showToast("Log out failed: " + err.message);
-        });
+        .then(() => showToast("အကောင့်ထွက်လိုက်ပါပြီ။"))
+        .catch(err => showToast("ထွက်၍မရပါ- " + err.message));
     }
 
-    // Firestore Streams Initializers
+    // Dynamic Real-time stream controllers
     function startRealtimeListeners(userId) {
-      stopRealtimeListeners(); // Safety cleanup pre-init
+      stopRealtimeListeners();
 
-      // Listener 1: Real-time Recent Chat Sessions Feed Tracker
-      activeChatsSnapshotUnsubscribe = db.collection("Users").doc(userId)
-        .collection("RecentChats")
-        .orderBy("timestamp", "desc")
-        .onSnapshot((snapshot) => {
-          renderRecentChatsList(snapshot);
-        }, (error) => {
-          console.error("Recent chats listener connection failed.", error);
+      // Listener 1: Safe Private Recent Chats Sub-collection
+      const recentChatsRef = db.collection('artifacts').doc(appId).collection('users').doc(userId).collection('RecentChats');
+      activeChatsSnapshotUnsubscribe = recentChatsRef.onSnapshot((snapshot) => {
+        const chatList = [];
+        snapshot.forEach(doc => {
+          chatList.push(doc.data());
         });
+        chatList.sort((a, b) => {
+          const tA = a.timestamp?.seconds || 0;
+          const tB = b.timestamp?.seconds || 0;
+          return tB - tA;
+        });
+        renderRecentChatsList(chatList);
+      }, (error) => {
+        console.error("Chats feed error", error);
+      });
 
-      // Listener 2: Real-time Friends list feed loader
-      activeFriendsSnapshotUnsubscribe = db.collection("Users").doc(userId)
-        .collection("Friends")
-        .onSnapshot((snapshot) => {
-          renderFriendsList(snapshot);
-        }, (error) => {
-          console.error("Friends database connection lost.", error);
+      // Listener 2: Safe Private Friends Sub-collection
+      const friendsRef = db.collection('artifacts').doc(appId).collection('users').doc(userId).collection('Friends');
+      activeFriendsSnapshotUnsubscribe = friendsRef.onSnapshot((snapshot) => {
+        const friendsList = [];
+        snapshot.forEach(doc => {
+          friendsList.push(doc.data());
         });
+        renderFriendsList(friendsList);
+      }, (error) => {
+        console.error("Friends feed error", error);
+      });
     }
 
-    // Realtime teardown logic (Prevents leaks on logout/reauth environments)
     function stopRealtimeListeners() {
       if (activeChatsSnapshotUnsubscribe) {
         activeChatsSnapshotUnsubscribe();
@@ -1265,31 +1231,26 @@
         activeRoomMessagesUnsubscribe();
         activeRoomMessagesUnsubscribe = null;
       }
-      if (activeUserDocUnsubscribe) {
-        activeUserDocUnsubscribe();
-        activeUserDocUnsubscribe = null;
-      }
     }
 
-    // UI Builders: Render Recent Chats List
-    function renderRecentChatsList(snapshot) {
+    // Recent chats render UI
+    function renderRecentChatsList(chatList) {
       const container = document.getElementById("chats-list");
       container.innerHTML = "";
 
-      if (snapshot.empty) {
+      if (chatList.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
             <i class="fa-solid fa-message-slash"></i>
-            <p>No active conversations. Open your Friends tab to start messaging!</p>
+            <p>စကားပြောထားသည့်မှတ်တမ်းမရှိသေးပါ။<br>သူငယ်ချင်းရှာပြီး စာတိုပေးပို့လိုက်ပါ!</p>
           </div>
         `;
         return;
       }
 
-      snapshot.forEach(doc => {
-        const data = doc.data();
+      chatList.forEach(data => {
         const firstLetter = data.name ? data.name.charAt(0).toUpperCase() : "?";
-        const cleanTime = data.timestamp ? formatTime(data.timestamp.toDate()) : "Now";
+        const cleanTime = data.timestamp ? formatTime(data.timestamp.toDate()) : "ယခု";
 
         const div = document.createElement("div");
         div.className = "list-item";
@@ -1302,35 +1263,33 @@
               <span class="item-name">${data.name}</span>
               <span class="item-time">${cleanTime}</span>
             </div>
-            <div class="item-subtext">${data.lastMessage || ""}</div>
+            <div class="item-subtext">${escapeHTML(data.lastMessage || "")}</div>
           </div>
         `;
         container.appendChild(div);
       });
     }
 
-    // UI Builders: Render Friends Tab List
-    function renderFriendsList(snapshot) {
+    // Friends list render UI
+    function renderFriendsList(friendsList) {
       const container = document.getElementById("friends-list");
       container.innerHTML = "";
 
-      if (snapshot.empty) {
+      if (friendsList.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
             <i class="fa-solid fa-user-group"></i>
-            <p>No friends added yet. Press the plus icon above or the floating button below to search and add!</p>
+            <p>ထည့်ထားသောသူငယ်ချင်းများမရှိသေးပါ။<br>အပေါ်ရှိအပေါင်းလက္ခဏာကိုနှိပ်ပြီး ဂျီမေးလ်ဖြင့်ရှာဖွေပါ!</p>
           </div>
         `;
         return;
       }
 
-      snapshot.forEach(doc => {
-        const data = doc.data();
+      friendsList.forEach(data => {
         const firstLetter = data.name ? data.name.charAt(0).toUpperCase() : "?";
 
         const div = document.createElement("div");
         div.className = "list-item";
-        // Directly maps into action click opening direct real-time chat instantly
         div.onclick = () => openChatRoom(data.uid, data.name, data.fcmToken);
 
         div.innerHTML = `
@@ -1339,71 +1298,69 @@
             <div class="item-row">
               <span class="item-name">${data.name}</span>
             </div>
-            <div class="item-subtext">Tap to message</div>
+            <div class="item-subtext">စာတိုပေးပို့ရန် နှိပ်ပါ</div>
           </div>
         `;
         container.appendChild(div);
       });
     }
 
-    // Dialog trigger wrapping adding dynamic additions
+    // Dialog prompts for Search & Friend Addition
     function openAddFriendModal() {
-      openGlobalModal("Add Friend", "Enter friend's Gmail", "Add Friend", (emailInput) => {
+      openGlobalModal("သူငယ်ချင်းအသစ်ရှာဖွေမည်", "သူငယ်ချင်း၏ Gmail ထည့်ပါ", "ပေါင်းထည့်မည်", (emailInput) => {
         const email = emailInput.trim().toLowerCase();
         if (!email) {
-          showToast("Gmail address input cannot be empty.");
+          showToast("ဂျီမေးလ်လိပ်စာ လွတ်နေပါသည်!");
           return;
         }
-
-        if (email === currentUserData.email) {
-          showToast("You cannot add your own account.");
+        if (currentUserData && email === currentUserData.email) {
+          showToast("မိမိကိုယ်တိုင် ပြန်ပေါင်းထည့်၍မရပါ!");
           return;
         }
-
         searchAndAddFriend(email);
       });
     }
 
-    // Global User search dialog
     function openSearchModal() {
-      openGlobalModal("Search User", "Search by registered Gmail", "Go Chat", (emailInput) => {
+      openGlobalModal("သူငယ်ချင်းရှာမည်", "ရှာဖွေလိုသော Gmail ထည့်ပါ", "စကားပြောမည်", (emailInput) => {
         const email = emailInput.trim().toLowerCase();
         if (!email) return;
         searchAndOpenChat(email);
       });
     }
 
-    // MUTUAL FRIEND ADD LOGIC (Atomicity Requirement verified)
+    // MUTUAL FRIEND ADD
     function searchAndAddFriend(email) {
-      showToast("Searching for user...");
+      showToast("ရှာဖွေနေပါသည်...");
 
-      db.collection("Users").where("email", "==", email).get()
+      db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Users').get()
         .then((snapshot) => {
-          if (snapshot.empty) {
-            showToast("No user found with that Gmail address.");
+          let foundUser = null;
+          snapshot.forEach(doc => {
+            const userData = doc.data();
+            if (userData.email === email) {
+              foundUser = userData;
+            }
+          });
+
+          if (!foundUser) {
+            showToast("ရှာဖွေထားသော ဂျီမေးလ်ဖြင့် အကောင့်မရှိသေးပါ။");
             return;
           }
 
-          // Found match
-          const targetDoc = snapshot.docs[0];
-          const targetUser = targetDoc.data();
           const me = auth.currentUser;
-
-          // Double sub-collection safe writing inside active Firestore schemas 
-          const myFriendRef = db.collection("Users").doc(me.uid).collection("Friends").doc(targetUser.uid);
-          const targetsFriendRef = db.collection("Users").doc(targetUser.uid).collection("Friends").doc(me.uid);
+          const myFriendRef = db.collection('artifacts').doc(appId).collection('users').doc(me.uid).collection('Friends').doc(foundUser.uid);
+          const targetsFriendRef = db.collection('artifacts').doc(appId).collection('users').doc(foundUser.uid).collection('Friends').doc(me.uid);
 
           const batch = db.batch();
 
-          // User A adds User B
           batch.set(myFriendRef, {
-            uid: targetUser.uid,
-            name: targetUser.name,
-            email: targetUser.email,
-            fcmToken: targetUser.fcmToken || ""
+            uid: foundUser.uid,
+            name: foundUser.name,
+            email: foundUser.email,
+            fcmToken: foundUser.fcmToken || ""
           });
 
-          // User B adds User A (MUTUAL TRIGGER)
           batch.set(targetsFriendRef, {
             uid: me.uid,
             name: currentUserData.name,
@@ -1412,53 +1369,64 @@
           });
 
           return batch.commit().then(() => {
-            showToast(`Successfully added ${targetUser.name} to Friends!`);
+            showToast(`${foundUser.name} အား သူငယ်ချင်းအဖြစ် ထည့်သွင်းပြီးပါပြီ။`);
           });
         })
         .catch(err => {
-          showToast("Operation failed: " + err.message);
+          showToast("ပြဿနာဖြစ်ပွားပါသည်: " + err.message);
         });
     }
 
-    // Easy Search Helper directly opening Conversation threads
+    // Fast search helper
     function searchAndOpenChat(email) {
-      db.collection("Users").where("email", "==", email).get()
+      db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Users').get()
         .then((snapshot) => {
-          if (snapshot.empty) {
-            showToast("User not found.");
+          let foundUser = null;
+          snapshot.forEach(doc => {
+            const userData = doc.data();
+            if (userData.email === email) {
+              foundUser = userData;
+            }
+          });
+
+          if (!foundUser) {
+            showToast("အကောင့် ရှာမတွေ့ပါ။");
             return;
           }
-          const target = snapshot.docs[0].data();
-          openChatRoom(target.uid, target.name, target.fcmToken);
+          openChatRoom(foundUser.uid, foundUser.name, foundUser.fcmToken);
         });
     }
 
-    // ACTIVE CHAT ROOM LOGIC (Room management inside SPA structures)
+    // Conversation layout setup
     function openChatRoom(uid, name, fcmToken) {
       activeChatTarget = { uid, name, fcmToken };
 
-      // Bind dynamic Header variables
       document.getElementById("chat-active-name").innerText = name;
       document.getElementById("chat-active-avatar").innerText = name.charAt(0).toUpperCase();
 
-      // UI Screen Transition
       showScreen("chat-room-screen");
 
-      // Pull up live Message Streams using structural composite IDs
       const conversationId = getConversationId(auth.currentUser.uid, uid);
 
       if (activeRoomMessagesUnsubscribe) {
         activeRoomMessagesUnsubscribe();
       }
 
-      activeRoomMessagesUnsubscribe = db.collection("Conversations").doc(conversationId)
-        .collection("Messages")
-        .orderBy("timestamp", "asc")
-        .onSnapshot((snapshot) => {
-          renderChatRoomMessages(snapshot);
-        }, (error) => {
-          console.error("Messages Sync Lost", error);
+      const messagesRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Conversations').doc(conversationId).collection('Messages');
+      activeRoomMessagesUnsubscribe = messagesRef.onSnapshot((snapshot) => {
+        const messagesList = [];
+        snapshot.forEach(doc => {
+          messagesList.push(doc.data());
         });
+        messagesList.sort((a, b) => {
+          const tA = a.timestamp?.seconds || 0;
+          const tB = b.timestamp?.seconds || 0;
+          return tA - tB;
+        });
+        renderChatRoomMessages(messagesList);
+      }, (error) => {
+        console.error("Messages sync fail", error);
+      });
     }
 
     function exitChatRoom() {
@@ -1467,35 +1435,32 @@
         activeRoomMessagesUnsubscribe = null;
       }
       activeChatTarget = null;
-      // Drop screen state back to active Navigation Tab view
       switchNavTab(currentNavTab);
     }
 
-    // Dynamic Conversation Key generator based on structural alphabetical sorting order
     function getConversationId(uid1, uid2) {
       return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
     }
 
-    // Render Room messages loop
-    function renderChatRoomMessages(snapshot) {
+    // Render message rows inside chat room viewport
+    function renderChatRoomMessages(messagesList) {
       const container = document.getElementById("chat-messages-container");
       container.innerHTML = "";
 
-      if (snapshot.empty) {
+      if (messagesList.length === 0) {
         container.innerHTML = `
           <div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 40px;">
-             No messages here yet. Say Hi! 👋
+             မိတ်ဆက်စကား စတင်ပြောဆိုလိုက်ပါ 👋
           </div>
         `;
         return;
       }
 
-      snapshot.forEach(doc => {
-        const msg = doc.data();
+      messagesList.forEach(msg => {
         const me = auth.currentUser;
         const isSent = msg.senderId === me.uid;
         const rowClass = isSent ? "sent" : "received";
-        const cleanTime = msg.timestamp ? formatTime(msg.timestamp.toDate()) : "now";
+        const cleanTime = msg.timestamp ? formatTime(msg.timestamp.toDate()) : "ယခု";
 
         const row = document.createElement("div");
         row.className = `message-row ${rowClass}`;
@@ -1508,13 +1473,12 @@
         container.appendChild(row);
       });
 
-      // Smooth scroll to target view limit
       setTimeout(() => {
         container.scrollTop = container.scrollHeight;
-      }, 50);
+      }, 60);
     }
 
-    // REAL-TIME MESSAGE WRITER EXECUTOR
+    // Message dispatch publisher
     function sendActiveMessage() {
       const input = document.getElementById("chat-message-input");
       const text = input.value.trim();
@@ -1532,18 +1496,14 @@
         timestamp: timestamp
       };
 
-      // Wipe interface input ready for next keypresses
       input.value = "";
 
-      // 1. Publish into Messages stream sub-collection
-      db.collection("Conversations").doc(conversationId)
-        .collection("Messages").add(messageObj)
+      const messagesRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Conversations').doc(conversationId).collection('Messages');
+      messagesRef.add(messageObj)
         .then(() => {
-          // 2. Perform Dynamic Atomic updates inside Recent Chats schemas for BOTH target sessions
           const batch = db.batch();
 
-          // My updates
-          const myRecentRef = db.collection("Users").doc(me.uid).collection("RecentChats").doc(target.uid);
+          const myRecentRef = db.collection('artifacts').doc(appId).collection('users').doc(me.uid).collection('RecentChats').doc(target.uid);
           batch.set(myRecentRef, {
             uid: target.uid,
             name: target.name,
@@ -1552,8 +1512,7 @@
             fcmToken: target.fcmToken || ""
           }, { merge: true });
 
-          // Target updates
-          const targetRecentRef = db.collection("Users").doc(target.uid).collection("RecentChats").doc(me.uid);
+          const targetRecentRef = db.collection('artifacts').doc(appId).collection('users').doc(target.uid).collection('RecentChats').doc(me.uid);
           batch.set(targetRecentRef, {
             uid: me.uid,
             name: currentUserData.name,
@@ -1565,25 +1524,23 @@
           return batch.commit();
         })
         .then(() => {
-          // 3. Trigger Native WebView Notification Dispatcher via Android Bridge implementation
           if (target.fcmToken) {
             triggerNativeNotification(target.fcmToken, currentUserData.name, text);
           }
         })
         .catch(err => {
-          console.error("Transmission error occurred.", err);
-          showToast("Failed to deliver message.");
+          console.error("Transmission error:", err);
+          showToast("မက်ဆေ့ခ်ျ ပို့၍မရပါ");
         });
     }
 
-    // Keyboard support layout configurations
     document.getElementById("chat-message-input").addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
         sendActiveMessage();
       }
     });
 
-    // Helper: Escape Special HTML tags safely
+    // Helper utilities
     function escapeHTML(str) {
       return str.replace(/[&<>'"]/g, 
         tag => ({
@@ -1596,13 +1553,12 @@
       );
     }
 
-    // Helper: Beautify JavaScript timestamp logs
     function formatTime(date) {
       let hours = date.getHours();
       let minutes = date.getMinutes();
       const ampm = hours >= 12 ? 'PM' : 'AM';
       hours = hours % 12;
-      hours = hours ? hours : 12; // convert 0 to 12
+      hours = hours ? hours : 12;
       minutes = minutes < 10 ? '0'+minutes : minutes;
       return `${hours}:${minutes} ${ampm}`;
     }
