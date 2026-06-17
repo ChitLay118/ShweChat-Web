@@ -1,426 +1,1573 @@
 <!DOCTYPE html>
-<html lang="my">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ShweChat Premium</title>
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <meta charset="UTF-8">
+  <!-- Crucial for Mobile App / WebView fitting without zooming issues -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ShweChat</title>
+  
+  <!-- Inter Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons for Beautiful Telegram-style UI -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        :root {
-            --primary: #0084ff;
-            --secondary: #00c6ff;
-            --bg: #f0f2f5;
-            --surface: #ffffff;
-            --text-main: #1c1e21;
-            --text-sub: #65676b;
-            --sent-bg: #0084ff;
-            --recv-bg: #e4e6eb;
-        }
+  <!-- CSS Styling -->
+  <style>
+    :root {
+      --primary-color: #2481cc; /* Elegant Telegram Blue */
+      --primary-dark: #1d71b3;
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --text-main: #1c2434;
+      --text-muted: #7e8b9b;
+      --border-color: #e4e8ec;
+      --bubble-sent: #e1f3fc;
+      --bubble-sent-text: #0b1f35;
+      --bubble-received: #ffffff;
+      --bubble-received-text: #1c2434;
+      --online-color: #4caf50;
+      --safe-area-top: env(safe-area-inset-top, 0px);
+      --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; }
-        .hidden { display: none !important; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
 
-        /* --- Login/Register Screen --- */
-        #auth-screen { 
-            height: 100vh; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; background: linear-gradient(135deg, var(--primary), var(--secondary));
-            padding: 20px;
-        }
-        .auth-card { 
-            background: white; width: 100%; max-width: 400px; padding: 40px 30px; 
-            border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;
-        }
-        .auth-logo { font-size: 32px; font-weight: 800; color: var(--primary); margin-bottom: 10px; }
-        .auth-sub { color: var(--text-sub); margin-bottom: 30px; font-size: 14px; }
-        .auth-input { 
-            width: 100%; padding: 14px 18px; margin-bottom: 15px; border: 1.5px solid #eee; 
-            border-radius: 12px; font-size: 16px; outline: none; transition: 0.3s;
-        }
-        .auth-input:focus { border-color: var(--primary); }
-        .auth-btn { 
-            width: 100%; padding: 15px; background: var(--primary); color: white; border: none; 
-            border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px;
-        }
-        .auth-toggle { margin-top: 20px; font-size: 14px; color: var(--text-sub); cursor: pointer; }
-        .auth-toggle span { color: var(--primary); font-weight: 700; }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-        /* --- Main App Layout --- */
-        .app-container { height: 100vh; display: flex; flex-direction: column; }
-        .app-header { 
-            background: var(--surface); padding: 15px 20px; display: flex; 
-            justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd;
-        }
-        .app-header h1 { font-size: 24px; font-weight: 800; margin: 0; color: var(--primary); }
-        
-        .content-area { flex: 1; overflow-y: auto; background: var(--bg); }
+    /* Container configured to fill Android WebView perfectly */
+    #app-container {
+      width: 100%;
+      height: 100%;
+      background-color: var(--card-bg);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-        /* --- Bottom Navigation --- */
-        .bottom-nav { 
-            height: 70px; background: var(--surface); display: flex; 
-            border-top: 1px solid #ddd; padding-bottom: 5px;
-        }
-        .nav-item { 
-            flex: 1; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; cursor: pointer; color: var(--text-sub); transition: 0.3s;
-        }
-        .nav-item.active { color: var(--primary); }
-        .nav-icon { font-size: 22px; margin-bottom: 2px; }
-        .nav-text { font-size: 10px; font-weight: 700; }
+    /* Screen Management */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg-color);
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
 
-        /* --- List UI (Chats & Friends) --- */
-        .list-card { 
-            background: var(--surface); margin: 10px; border-radius: 16px; 
-            overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .item { 
-            padding: 15px; display: flex; align-items: center; 
-            border-bottom: 1px solid #f5f5f5; transition: 0.2s;
-        }
-        .item:active { background: #f9f9f9; }
-        .avatar { 
-            width: 55px; height: 55px; border-radius: 20px; background: #eee; 
-            margin-right: 15px; display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 20px; color: white; text-transform: uppercase;
-        }
-        .info { flex: 1; }
-        .name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
-        .sub { font-size: 13px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 20;
+    }
 
-        /* --- Profile Screen --- */
-        .profile-container { padding: 40px 20px; text-align: center; }
-        .profile-img { 
-            width: 110px; height: 110px; border-radius: 40px; background: var(--primary); 
-            margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
-            font-size: 40px; color: white; box-shadow: 0 8px 20px rgba(0,132,255,0.3);
-        }
-        .p-name { font-size: 24px; font-weight: 800; margin-bottom: 5px; }
-        .p-email { color: var(--text-sub); margin-bottom: 40px; }
-        .p-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: left; }
-        .logout-btn { 
-            width: 100%; padding: 15px; border-radius: 12px; background: #fff1f0; 
-            color: #ff4d4f; border: 1.5px solid #ffa39e; font-weight: 700;
-        }
+    /* Common Header Styles */
+    .app-header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: calc(16px + var(--safe-area-top)) 16px 16px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      z-index: 100;
+      flex-shrink: 0;
+    }
 
-        /* --- Chat Screen --- */
-        #chat-screen { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100vh; 
-            background: white; z-index: 1000; display: flex; flex-direction: column;
-        }
-        .chat-header { 
-            padding: 10px 15px; display: flex; align-items: center; 
-            background: white; border-bottom: 1px solid #ddd;
-        }
-        .back-btn { font-size: 24px; margin-right: 15px; cursor: pointer; color: var(--primary); }
-        .chat-user-info { flex: 1; }
-        .msg-area { flex: 1; overflow-y: auto; padding: 20px; background: #f9f9fb; display: flex; flex-direction: column; }
-        .bubble { 
-            max-width: 80%; padding: 12px 16px; border-radius: 18px; margin-bottom: 10px; 
-            font-size: 15px; line-height: 1.5; word-wrap: break-word;
-        }
-        .sent { align-self: flex-end; background: var(--sent-bg); color: white; border-bottom-right-radius: 4px; }
-        .recv { align-self: flex-start; background: var(--recv-bg); color: var(--text-main); border-bottom-left-radius: 4px; }
-        
-        .chat-input { padding: 15px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #eee; }
-        .msg-inp { flex: 1; padding: 12px 20px; border: none; background: #f0f2f5; border-radius: 25px; outline: none; }
-        .send-btn { 
-            background: var(--primary); color: white; border: none; width: 45px; 
-            height: 45px; border-radius: 50%; font-size: 20px;
-        }
+    .app-header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
 
-        /* FAB */
-        .fab { 
-            position: fixed; bottom: 90px; right: 20px; width: 60px; height: 60px; 
-            background: var(--primary); border-radius: 20px; color: white; 
-            display: flex; align-items: center; justify-content: center; font-size: 30px;
-            box-shadow: 0 8px 20px rgba(0,132,255,0.4);
-        }
-    </style>
+    .app-header-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .header-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+    }
+
+    .header-btn:active {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Auth Screen styling */
+    #auth-screen {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .auth-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      width: 100%;
+      max-width: 400px;
+      border-radius: 24px;
+      padding: 32px 24px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .auth-logo i {
+      font-size: 48px;
+      color: var(--primary-color);
+      margin-bottom: 8px;
+    }
+
+    .auth-logo h2 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #1e3c72;
+    }
+
+    .auth-logo p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #5c6873;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+      background-color: #fcfdfe;
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .auth-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      margin-top: 8px;
+      box-shadow: 0 4px 12px rgba(36, 129, 204, 0.3);
+    }
+
+    .auth-btn:active {
+      background-color: var(--primary-dark);
+      transform: scale(0.98);
+    }
+
+    .auth-toggle-link {
+      text-align: center;
+      font-size: 14px;
+      color: var(--primary-color);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    /* Main Screens layout with Navigation */
+    .main-screen-content {
+      flex: 1;
+      overflow-y: auto;
+      background-color: var(--bg-color);
+      padding-bottom: calc(72px + var(--safe-area-bottom));
+    }
+
+    /* Navigation Bar */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: calc(64px + var(--safe-area-bottom));
+      background-color: #ffffff;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: var(--safe-area-bottom);
+      z-index: 150;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      width: 33.33%;
+      height: 100%;
+      transition: color 0.2s;
+      gap: 4px;
+    }
+
+    .nav-item i {
+      font-size: 20px;
+    }
+
+    .nav-item span {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .nav-item.active {
+      color: var(--primary-color);
+    }
+
+    /* Chat List Structure */
+    .list-container {
+      display: flex;
+      flex-direction: column;
+      padding: 8px 0;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid #f5f6f8;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .list-item:active {
+      background-color: #f0f4f8;
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      margin-right: 14px;
+      position: relative;
+      flex-shrink: 0;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .avatar.online::after {
+      content: '';
+      position: absolute;
+      bottom: 1px;
+      right: 1px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: var(--online-color);
+      border: 2px solid white;
+    }
+
+    .item-details {
+      flex: 1;
+      min-width: 0; /* Prevents text overflow breaks */
+    }
+
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .item-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-time {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .item-subtext {
+      font-size: 13px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Floating Action Button for Adding Friends */
+    .fab {
+      position: absolute;
+      bottom: calc(80px + var(--safe-area-bottom));
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 16px rgba(36, 129, 204, 0.4);
+      cursor: pointer;
+      z-index: 140;
+      transition: transform 0.1s, background-color 0.2s;
+    }
+
+    .fab:active {
+      transform: scale(0.92);
+      background-color: var(--primary-dark);
+    }
+
+    /* Chat Room Screen Specifics */
+    #chat-room-screen {
+      background-color: #eae6df; /* Classic Telegram-like Background Tint */
+      background-image: radial-gradient(rgba(0,0,0,0.04) 15%, transparent 15%);
+      background-size: 16px 16px;
+    }
+
+    .chat-room-header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: calc(12px + var(--safe-area-top)) 12px 12px 12px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .back-btn {
+      font-size: 18px;
+      color: white;
+      background: none;
+      border: none;
+      padding: 8px;
+      margin-right: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .back-btn:active {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .chat-header-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-header-meta {
+      min-width: 0;
+    }
+
+    .chat-header-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-header-status {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-room-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* Chat Messages Viewport */
+    .chat-messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message-row {
+      display: flex;
+      width: 100%;
+    }
+
+    .message-row.sent {
+      justify-content: flex-end;
+    }
+
+    .message-row.received {
+      justify-content: flex-start;
+    }
+
+    .message-bubble {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.4;
+      position: relative;
+      word-wrap: break-word;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .message-row.sent .message-bubble {
+      background-color: var(--bubble-sent);
+      color: var(--bubble-sent-text);
+      border-top-right-radius: 4px;
+    }
+
+    .message-row.received .message-bubble {
+      background-color: var(--bubble-received);
+      color: var(--bubble-received-text);
+      border-top-left-radius: 4px;
+    }
+
+    .message-timestamp {
+      display: block;
+      font-size: 9px;
+      color: var(--text-muted);
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    /* Input Bar */
+    .chat-input-bar {
+      background-color: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 8px 12px calc(8px + var(--safe-area-bottom)) 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .chat-input {
+      flex: 1;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-size: 15px;
+      outline: none;
+      background-color: #f8f9fa;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .chat-input:focus {
+      border-color: var(--primary-color);
+      background-color: white;
+    }
+
+    .send-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .send-btn:active {
+      background-color: var(--primary-dark);
+      transform: scale(0.92);
+    }
+
+    /* Profile View Layout */
+    .profile-card {
+      background-color: var(--card-bg);
+      margin: 16px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      font-size: 38px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 15px rgba(36, 129, 204, 0.25);
+    }
+
+    .profile-info {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .profile-field {
+      border-bottom: 1.5px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .profile-field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .profile-field-value {
+      font-size: 15px;
+      color: var(--text-main);
+      font-weight: 500;
+      margin-top: 4px;
+      word-break: break-all;
+    }
+
+    .logout-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+      box-shadow: 0 4px 12px rgba(244, 67, 54, 0.2);
+      transition: background-color 0.2s;
+    }
+
+    .logout-btn:active {
+      background-color: #d32f2f;
+    }
+
+    /* Modal dialog (Standard overlay modal for user feedback/actions in WebView context) */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 200;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      padding: 24px;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background-color: white;
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      transform: translateY(10px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.active .modal-box {
+      transform: translateY(0);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .modal-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      outline: none;
+    }
+
+    .modal-input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .modal-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .modal-btn.cancel {
+      background-color: transparent;
+      color: var(--text-muted);
+    }
+
+    .modal-btn.confirm {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    /* Custom Toast Notification inside WebView */
+    .toast {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: rgba(28, 36, 52, 0.9);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 300;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Empty state info graphics style */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      color: var(--text-muted);
+      gap: 12px;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      color: var(--border-color);
+    }
+
+    .empty-state p {
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
 
-    <!-- ၁။ Login / Register Screen -->
-    <div id="auth-screen">
-        <div class="auth-card">
-            <div class="auth-logo">ShweChat</div>
-            <div class="auth-sub">Premium Messaging Experience</div>
-            
-            <input type="text" id="reg-name" class="auth-input hidden" placeholder="နာမည်အပြည့်အစုံ">
-            <input type="email" id="auth-email" class="auth-input" placeholder="Gmail လိပ်စာ">
-            <input type="password" id="auth-password" class="auth-input" placeholder="စကားဝှက် (Password)">
-            
-            <button id="btn-auth" class="auth-btn" onclick="handleAuth()">Login ဝင်မည်</button>
-            <div class="auth-toggle" onclick="toggleAuth()">အကောင့်မရှိသေးဘူးလား? <span>အသစ်ဖွင့်ပါ</span></div>
+  <!-- Full App Holder -->
+  <div id="app-container">
+
+    <!-- Toast UI System -->
+    <div id="toast-notif" class="toast">Action completed successfully</div>
+
+    <!-- 1. AUTH SCREEN (SPA Screen 1) -->
+    <div id="auth-screen" class="screen active">
+      <div class="auth-card">
+        <div class="auth-logo">
+          <i class="fa-solid fa-comments"></i>
+          <h2 id="auth-title">Welcome to ShweChat</h2>
+          <p id="auth-subtitle">Connect and collaborate elegantly</p>
         </div>
+
+        <div class="form-group" id="reg-name-group" style="display: none;">
+          <label>Full Name</label>
+          <input type="text" id="auth-name" placeholder="Enter your full name">
+        </div>
+
+        <div class="form-group">
+          <label>Gmail Address</label>
+          <input type="email" id="auth-email" placeholder="example@gmail.com">
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="auth-password" placeholder="At least 6 characters">
+        </div>
+
+        <button class="auth-btn" id="auth-submit-btn">Login</button>
+        <div class="auth-toggle-link" id="auth-toggle-btn">Don't have an account? Register</div>
+      </div>
     </div>
 
-    <!-- ၂။ Main App Screen -->
-    <div id="app-screen" class="app-container hidden">
-        <div class="app-header">
-            <h1 id="tab-title">Chats</h1>
-            <div style="font-size: 24px;">✨</div>
+    <!-- 2. HOME CHATS SCREEN (SPA Screen 2) -->
+    <div id="chats-screen" class="screen">
+      <header class="app-header">
+        <h1>ShweChat</h1>
+        <div class="app-header-actions">
+          <button class="header-btn" onclick="openSearchModal()"><i class="fa-solid fa-magnifying-glass"></i></button>
         </div>
+      </header>
 
-        <div id="main-content" class="content-area">
-            <!-- Dynamic Content -->
+      <div class="main-screen-content">
+        <div id="chats-list" class="list-container">
+          <!-- Dynamic Chats injection -->
         </div>
-
-        <div class="bottom-nav">
-            <div class="nav-item active" onclick="showTab('chats', this)">
-                <span class="nav-icon">💬</span><span class="nav-text">CHATS</span>
-            </div>
-            <div class="nav-item" onclick="showTab('friends', this)">
-                <span class="nav-icon">👥</span><span class="nav-text">FRIENDS</span>
-            </div>
-            <div class="nav-item" onclick="showTab('profile', this)">
-                <span class="nav-icon">👤</span><span class="nav-text">PROFILE</span>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <!-- ၃။ Chat Room Screen -->
-    <div id="chat-screen" class="hidden">
-        <div class="chat-header">
-            <div class="back-btn" onclick="closeChat()">←</div>
-            <div class="avatar" id="c-avatar" style="width:40px; height:40px; border-radius:14px; font-size:16px;"></div>
-            <div class="chat-user-info">
-                <div id="c-name" style="font-weight:700;">Name</div>
-                <div style="font-size:11px; color:var(--primary);">Online</div>
-            </div>
-            <div style="display:flex; gap:20px; font-size:22px;">
-                <span onclick="makeCall('voice')" style="cursor:pointer">📞</span>
-                <span onclick="makeCall('video')" style="cursor:pointer">📷</span>
-            </div>
+    <!-- 3. FRIENDS SCREEN (SPA Screen 3) -->
+    <div id="friends-screen" class="screen">
+      <header class="app-header">
+        <h1>Friends</h1>
+        <div class="app-header-actions">
+          <button class="header-btn" onclick="openAddFriendModal()"><i class="fa-solid fa-user-plus"></i></button>
         </div>
-        <div id="msg-list" class="msg-area"></div>
-        <div class="chat-input">
-            <input type="text" id="msg-inp" class="msg-inp" placeholder="စာရိုက်ပါ...">
-            <button class="send-btn" onclick="sendMsg()">➤</button>
+      </header>
+
+      <div class="main-screen-content">
+        <div id="friends-list" class="list-container">
+          <!-- Dynamic Friends list injection -->
         </div>
+      </div>
+
+      <!-- Floating Action Button for prompt action (Adds friend) -->
+      <div class="fab" onclick="openAddFriendModal()">
+        <i class="fa-solid fa-user-plus"></i>
+      </div>
     </div>
 
-    <!-- FAB for adding friends -->
-    <div id="fab-add" class="fab hidden" onclick="addFriend()">+</div>
+    <!-- 4. PROFILE SCREEN (SPA Screen 4) -->
+    <div id="profile-screen" class="screen">
+      <header class="app-header">
+        <h1>My Profile</h1>
+      </header>
 
-    <script>
-        // --- Firebase Config ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyD355MSuzGQ70An7M7rdG8APTqk-xtgFoM",
-            authDomain: "shwechatmm.firebaseapp.com",
-            projectId: "shwechatmm",
-            storageBucket: "shwechatmm.firebasestorage.app",
-            messagingSenderId: "904518107602",
-            appId: "1:904518107602:android:89231af7657c3ded44880b"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+      <div class="main-screen-content">
+        <div class="profile-card">
+          <div id="profile-avatar-circle" class="profile-avatar">U</div>
+          <div class="profile-info">
+            <div class="profile-field">
+              <div class="profile-field-label">Name</div>
+              <div id="profile-name-val" class="profile-field-value">Your Name</div>
+            </div>
+            <div class="profile-field">
+              <div class="profile-field-label">Gmail</div>
+              <div id="profile-email-val" class="profile-field-value">yourname@gmail.com</div>
+            </div>
+            <div class="profile-field">
+              <div class="profile-field-label">User UID</div>
+              <div id="profile-uid-val" class="profile-field-value">No UID Connected</div>
+            </div>
+          </div>
+          <button class="logout-btn" onclick="handleLogout()">Logout</button>
+        </div>
+      </div>
+    </div>
 
-        let me = null;
-        let isLogin = true;
-        let activeFriend = null;
+    <!-- 5. CHAT ROOM SCREEN (Fully layered popup style backnav architecture) -->
+    <div id="chat-room-screen" class="screen">
+      <header class="chat-room-header">
+        <button class="back-btn" onclick="exitChatRoom()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div class="chat-header-info">
+          <div id="chat-active-avatar" class="avatar" style="width: 38px; height: 38px; margin-right: 0; font-size: 14px;">C</div>
+          <div class="chat-header-meta">
+            <div id="chat-active-name" class="chat-header-name">Loading...</div>
+            <div id="chat-active-status" class="chat-header-status">online</div>
+          </div>
+        </div>
+        <div class="chat-room-actions">
+          <button class="header-btn" onclick="initiateBridgeCall('voice')"><i class="fa-solid fa-phone"></i></button>
+          <button class="header-btn" onclick="initiateBridgeCall('video')"><i class="fa-solid fa-video"></i></button>
+        </div>
+      </header>
 
-        // --- Authentication ---
-        function toggleAuth() {
-            isLogin = !isLogin;
-            document.getElementById('reg-name').classList.toggle('hidden', isLogin);
-            document.getElementById('btn-auth').innerText = isLogin ? 'Login ဝင်မည်' : 'အကောင့်ဖွင့်မည်';
-            document.querySelector('.auth-toggle').innerHTML = isLogin ? 'အကောင့်မရှိသေးဘူးလား? <span>အသစ်ဖွင့်ပါ</span>' : 'အကောင့်ရှိပြီးသားလား? <span>Login ဝင်ပါ</span>';
+      <!-- Message Bubbles container -->
+      <div class="chat-messages-area" id="chat-messages-container">
+        <!-- Render realtime message bubbles here -->
+      </div>
+
+      <!-- Message sender interaction tray -->
+      <div class="chat-input-bar">
+        <input type="text" id="chat-message-input" class="chat-input" placeholder="Type a message..." autocomplete="off">
+        <button class="send-btn" onclick="sendActiveMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+
+    <!-- SHARED NAVIGATION SYSTEM -->
+    <nav class="bottom-nav" id="main-nav-bar" style="display: none;">
+      <div class="nav-item active" onclick="switchNavTab('chats')" id="nav-chats">
+        <i class="fa-solid fa-message"></i>
+        <span>Chats</span>
+      </div>
+      <div class="nav-item" onclick="switchNavTab('friends')" id="nav-friends">
+        <i class="fa-solid fa-users"></i>
+        <span>Friends</span>
+      </div>
+      <div class="nav-item" onclick="switchNavTab('profile')" id="nav-profile">
+        <i class="fa-solid fa-user"></i>
+        <span>Profile</span>
+      </div>
+    </nav>
+
+    <!-- GENERIC MODAL dialog structure -->
+    <div class="modal-overlay" id="global-modal">
+      <div class="modal-box">
+        <div class="modal-title" id="modal-box-title">Add New Friend</div>
+        <input type="text" id="modal-box-input" class="modal-input" placeholder="Enter value">
+        <div class="modal-actions">
+          <button class="modal-btn cancel" onclick="closeGlobalModal()">Cancel</button>
+          <button class="modal-btn confirm" id="modal-box-action-btn">Action</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Firebase SDK dependencies v8 (Required by spec) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- Dynamic Application Scripting logic -->
+  <script>
+    // HARDCODED FIREBASE INITIALIZATION CONFIG
+    const firebaseConfig = {
+      apiKey: "AIzaSyD355MSuzGQ70An7M7rdG8APTqk-xtgFoM",
+      authDomain: "shwechatmm.firebaseapp.com",
+      projectId: "shwechatmm",
+      storageBucket: "shwechatmm.firebasestorage.app",
+      messagingSenderId: "904518107602",
+      appId: "1:904518107602:android:89231af7657c3ded44880b"
+    };
+
+    // Instantiate Firebase instance safely
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Application state
+    let currentUserData = null;
+    let activeChatTarget = null;
+    let authMode = "login"; // "login" or "register"
+    let currentNavTab = "chats";
+
+    // Firestore Observers listeners stack for clean SPA lifecycle
+    let activeChatsSnapshotUnsubscribe = null;
+    let activeFriendsSnapshotUnsubscribe = null;
+    let activeRoomMessagesUnsubscribe = null;
+
+    // Toast logic implementation (Safer inside iframe containers)
+    function showToast(message) {
+      const toast = document.getElementById("toast-notif");
+      toast.innerText = message;
+      toast.classList.add("show");
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+
+    // Modal Manager
+    function openGlobalModal(title, placeholder, confirmBtnText, onConfirmCallback) {
+      const overlay = document.getElementById("global-modal");
+      const titleEl = document.getElementById("modal-box-title");
+      const inputEl = document.getElementById("modal-box-input");
+      const actionBtn = document.getElementById("modal-box-action-btn");
+
+      titleEl.innerText = title;
+      inputEl.placeholder = placeholder;
+      inputEl.value = "";
+      actionBtn.innerText = confirmBtnText;
+
+      // Unbind previous onclick
+      actionBtn.onclick = null;
+      actionBtn.onclick = () => {
+        onConfirmCallback(inputEl.value);
+        closeGlobalModal();
+      };
+
+      overlay.classList.add("active");
+    }
+
+    function closeGlobalModal() {
+      document.getElementById("global-modal").classList.remove("active");
+    }
+
+    // Android Hybrid Bridge Interface Declarations & Triggers
+    function initiateBridgeCall(type) {
+      if (!activeChatTarget) return;
+      const targetUid = activeChatTarget.uid;
+      const targetName = activeChatTarget.name;
+
+      showToast(`Initiating ${type} call to ${targetName}...`);
+      
+      // Native interface wrapper execution
+      if (window.Android && typeof window.Android.startCall === 'function') {
+        try {
+          window.Android.startCall(targetUid, type, targetName);
+        } catch (e) {
+          console.error("Android startCall Bridge failed", e);
+        }
+      } else {
+        console.warn("Android Bridge API: 'startCall' was invoked manually, Native endpoint interface is inactive outside Android Device environments.");
+      }
+    }
+
+    function triggerNativeNotification(targetToken, senderName, message) {
+      if (!targetToken) return;
+      if (window.Android && typeof window.Android.sendNoti === 'function') {
+        try {
+          window.Android.sendNoti(targetToken, senderName, message);
+        } catch (e) {
+          console.error("Android sendNoti Bridge failed", e);
+        }
+      } else {
+        console.warn("Android Notification Bridge API invoked - token: " + targetToken);
+      }
+    }
+
+    // Public Native Interface updates receiver
+    window.updateFCMToken = function(token) {
+      const user = auth.currentUser;
+      if (user) {
+        db.collection("Users").doc(user.uid).update({
+          fcmToken: token
+        })
+        .then(() => {
+          showToast("FCM Token updated via Native Integration.");
+        })
+        .catch(err => {
+          console.error("Token update failed", err);
+        });
+      } else {
+        console.warn("FCM Token update caught, but no Active authenticated user was detected.");
+      }
+    };
+
+    // UI screen switches
+    function showScreen(screenId) {
+      document.querySelectorAll(".screen").forEach(screen => {
+        screen.classList.remove("active");
+      });
+      document.getElementById(screenId).classList.add("active");
+    }
+
+    // Nav-bar controllers
+    function switchNavTab(tabName) {
+      currentNavTab = tabName;
+      document.querySelectorAll(".nav-item").forEach(item => {
+        item.classList.remove("active");
+      });
+      document.getElementById(`nav-${tabName}`).classList.add("active");
+      
+      // Trigger SPA Layout toggles
+      if (tabName === "chats") {
+        showScreen("chats-screen");
+      } else if (tabName === "friends") {
+        showScreen("friends-screen");
+      } else if (tabName === "profile") {
+        showScreen("profile-screen");
+      }
+    }
+
+    // Auth screen mode toggler
+    document.getElementById("auth-toggle-btn").addEventListener("click", () => {
+      const regNameGroup = document.getElementById("reg-name-group");
+      const authTitle = document.getElementById("auth-title");
+      const authSubtitle = document.getElementById("auth-subtitle");
+      const submitBtn = document.getElementById("auth-submit-btn");
+      const toggleBtn = document.getElementById("auth-toggle-btn");
+
+      if (authMode === "login") {
+        authMode = "register";
+        regNameGroup.style.display = "flex";
+        authTitle.innerText = "Join ShweChat";
+        authSubtitle.innerText = "Connect across networks instantly";
+        submitBtn.innerText = "Register Now";
+        toggleBtn.innerText = "Already have an account? Login";
+      } else {
+        authMode = "login";
+        regNameGroup.style.display = "none";
+        authTitle.innerText = "Welcome to ShweChat";
+        authSubtitle.innerText = "Connect and collaborate elegantly";
+        submitBtn.innerText = "Login";
+        toggleBtn.innerText = "Don't have an account? Register";
+      }
+    });
+
+    // Sign In and Setup listeners
+    document.getElementById("auth-submit-btn").addEventListener("click", () => {
+      const email = document.getElementById("auth-email").value.trim();
+      const password = document.getElementById("auth-password").value;
+      const name = document.getElementById("auth-name").value.trim();
+
+      if (!email || !password) {
+        showToast("Please fill all fields.");
+        return;
+      }
+
+      if (authMode === "register") {
+        if (!name) {
+          showToast("Name field is required.");
+          return;
         }
 
-        async function handleAuth() {
-            const email = document.getElementById('auth-email').value.trim();
-            const pass = document.getElementById('auth-password').value;
-            const name = document.getElementById('reg-name').value.trim();
+        // Fire Email/Password Sign-up
+        auth.createUserWithEmailAndPassword(email, password)
+          .then((userCredential) => {
+            const user = userCredential.user;
+            // Complete User node mapping structure inside Firestore DB "Users" Collection
+            return db.collection("Users").doc(user.uid).set({
+              uid: user.uid,
+              name: name,
+              email: email.toLowerCase(),
+              profilePic: "", 
+              fcmToken: "" // Ready for Android Bridge injection updateFCMToken()
+            });
+          })
+          .then(() => {
+            showToast("Registration successful!");
+          })
+          .catch((error) => {
+            showToast(error.message);
+          });
 
-            if(!email || !pass) return alert("ဖြည့်စွက်ပါ");
+      } else {
+        // Authenticating User Login
+        auth.signInWithEmailAndPassword(email, password)
+          .then(() => {
+            showToast("Welcome back to ShweChat!");
+          })
+          .catch((error) => {
+            showToast(error.message);
+          });
+      }
+    });
 
-            try {
-                if(isLogin) {
-                    await auth.signInWithEmailAndPassword(email, pass);
-                } else {
-                    if(!name) return alert("နာမည်ထည့်ပါ");
-                    const res = await auth.createUserWithEmailAndPassword(email, pass);
-                    await db.collection("Users").doc(res.user.uid).set({
-                        uid: res.user.uid, name: name, email: email, fcmToken: ""
-                    });
-                }
-            } catch(e) { alert(e.message); }
-        }
+    // Session State Listener hook
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        // Sync local app session data
+        db.collection("Users").doc(user.uid).get()
+          .then((doc) => {
+            if (doc.exists) {
+              currentUserData = doc.data();
+              // Update local profile displays
+              document.getElementById("profile-name-val").innerText = currentUserData.name;
+              document.getElementById("profile-email-val").innerText = currentUserData.email;
+              document.getElementById("profile-uid-val").innerText = currentUserData.uid;
+              document.getElementById("profile-avatar-circle").innerText = currentUserData.name.charAt(0).toUpperCase();
 
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                me = user;
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('app-screen').classList.remove('hidden');
-                showTab('chats', document.querySelector('.nav-item'));
+              // Initialize Real-time Subscriptions
+              startRealtimeListeners(user.uid);
+              
+              // Hide Auth, display dynamic UI
+              document.getElementById("main-nav-bar").style.display = "flex";
+              switchNavTab("chats");
             } else {
-                document.getElementById('auth-screen').classList.remove('hidden');
-                document.getElementById('app-screen').classList.add('hidden');
+              showToast("Account metadata missing inside Firestore records.");
             }
+          });
+      } else {
+        // User is logged out. Cleanup subscriptions, show Auth screen
+        currentUserData = null;
+        stopRealtimeListeners();
+        
+        document.getElementById("main-nav-bar").style.display = "none";
+        showScreen("auth-screen");
+      }
+    });
+
+    // Graceful Signout Event
+    function handleLogout() {
+      auth.signOut()
+        .then(() => {
+          showToast("Signed out successfully.");
+        })
+        .catch(err => {
+          showToast("Log out failed: " + err.message);
+        });
+    }
+
+    // Firestore Streams Initializers
+    function startRealtimeListeners(userId) {
+      stopRealtimeListeners(); // Safety cleanup pre-init
+
+      // Listener 1: Real-time Recent Chat Sessions Feed Tracker
+      activeChatsSnapshotUnsubscribe = db.collection("Users").doc(userId)
+        .collection("RecentChats")
+        .orderBy("timestamp", "desc")
+        .onSnapshot((snapshot) => {
+          renderRecentChatsList(snapshot);
+        }, (error) => {
+          console.error("Recent chats listener connection failed.", error);
         });
 
-        // --- Navigation ---
-        function showTab(tab, el) {
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('tab-title').innerText = tab.toUpperCase();
-            document.getElementById('fab-add').classList.toggle('hidden', tab !== 'friends');
+      // Listener 2: Real-time Friends list feed loader
+      activeFriendsSnapshotUnsubscribe = db.collection("Users").doc(userId)
+        .collection("Friends")
+        .onSnapshot((snapshot) => {
+          renderFriendsList(snapshot);
+        }, (error) => {
+          console.error("Friends database connection lost.", error);
+        });
+    }
 
-            if(tab === 'chats') renderChats();
-            else if(tab === 'friends') renderFriends();
-            else if(tab === 'profile') renderProfile();
+    // Realtime teardown logic (Prevents leaks on logout/reauth environments)
+    function stopRealtimeListeners() {
+      if (activeChatsSnapshotUnsubscribe) {
+        activeChatsSnapshotUnsubscribe();
+        activeChatsSnapshotUnsubscribe = null;
+      }
+      if (activeFriendsSnapshotUnsubscribe) {
+        activeFriendsSnapshotUnsubscribe();
+        activeFriendsSnapshotUnsubscribe = null;
+      }
+      if (activeRoomMessagesUnsubscribe) {
+        activeRoomMessagesUnsubscribe();
+        activeRoomMessagesUnsubscribe = null;
+      }
+    }
+
+    // UI Builders: Render Recent Chats List
+    function renderRecentChatsList(snapshot) {
+      const container = document.getElementById("chats-list");
+      container.innerHTML = "";
+
+      if (snapshot.empty) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fa-solid fa-message-slash"></i>
+            <p>No active conversations. Open your Friends tab to start messaging!</p>
+          </div>
+        `;
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const firstLetter = data.name ? data.name.charAt(0).toUpperCase() : "?";
+        const cleanTime = data.timestamp ? formatTime(data.timestamp.toDate()) : "Now";
+
+        const div = document.createElement("div");
+        div.className = "list-item";
+        div.onclick = () => openChatRoom(data.uid, data.name, data.fcmToken);
+
+        div.innerHTML = `
+          <div class="avatar">${firstLetter}</div>
+          <div class="item-details">
+            <div class="item-row">
+              <span class="item-name">${data.name}</span>
+              <span class="item-time">${cleanTime}</span>
+            </div>
+            <div class="item-subtext">${data.lastMessage || ""}</div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // UI Builders: Render Friends Tab List
+    function renderFriendsList(snapshot) {
+      const container = document.getElementById("friends-list");
+      container.innerHTML = "";
+
+      if (snapshot.empty) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fa-solid fa-user-group"></i>
+            <p>No friends added yet. Press the plus icon above or the floating button below to search and add!</p>
+          </div>
+        `;
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const firstLetter = data.name ? data.name.charAt(0).toUpperCase() : "?";
+
+        const div = document.createElement("div");
+        div.className = "list-item";
+        // Directly maps into action click opening direct real-time chat instantly
+        div.onclick = () => openChatRoom(data.uid, data.name, data.fcmToken);
+
+        div.innerHTML = `
+          <div class="avatar online">${firstLetter}</div>
+          <div class="item-details">
+            <div class="item-row">
+              <span class="item-name">${data.name}</span>
+            </div>
+            <div class="item-subtext">Tap to message</div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Dialog trigger wrapping adding dynamic additions
+    function openAddFriendModal() {
+      openGlobalModal("Add Friend", "Enter friend's Gmail", "Add Friend", (emailInput) => {
+        const email = emailInput.trim().toLowerCase();
+        if (!email) {
+          showToast("Gmail address input cannot be empty.");
+          return;
         }
 
-        // --- Chats List ---
-        function renderChats() {
-            const area = document.getElementById('main-content');
-            area.innerHTML = '<div class="list-card" id="chat-list"></div>';
-            
-            db.collection("Users").doc(me.uid).collection("RecentChats").orderBy("timestamp", "desc").onSnapshot(snap => {
-                const list = document.getElementById('chat-list');
-                if(!list) return;
-                list.innerHTML = snap.empty ? '<div style="padding:40px; text-align:center; color:#aaa;">စာပို့ထားဖူးသူမရှိပါ။</div>' : '';
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    list.innerHTML += `
-                        <div class="item" onclick="openChat('${d.uid}', '${d.name}')">
-                            <div class="avatar" style="background:#0084ff">${d.name[0]}</div>
-                            <div class="info">
-                                <div class="name">${d.name}</div>
-                                <div class="sub">${d.lastMsg || 'စကားပြောရန်နှိပ်ပါ'}</div>
-                            </div>
-                        </div>`;
-                });
-            });
+        if (email === currentUserData.email) {
+          showToast("You cannot add your own account.");
+          return;
         }
 
-        // --- Friends List ---
-        function renderFriends() {
-            const area = document.getElementById('main-content');
-            area.innerHTML = '<div class="list-card" id="friend-list"></div>';
-            
-            db.collection("Users").doc(me.uid).collection("Friends").onSnapshot(snap => {
-                const list = document.getElementById('friend-list');
-                if(!list) return;
-                list.innerHTML = snap.empty ? '<div style="padding:40px; text-align:center; color:#aaa;">သူငယ်ချင်းမရှိသေးပါ။ <br>+ ကိုနှိပ်ပြီးပေါင်းပါ။</div>' : '';
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    list.innerHTML += `
-                        <div class="item" onclick="openChat('${d.uid}', '${d.name}')">
-                            <div class="avatar" style="background:#44bd32">${d.name[0]}</div>
-                            <div class="info">
-                                <div class="name">${d.name}</div>
-                                <div class="sub">${d.email}</div>
-                            </div>
-                        </div>`;
-                });
-            });
-        }
+        searchAndAddFriend(email);
+      });
+    }
 
-        async function addFriend() {
-            const email = prompt("ပေါင်းထည့်လိုသူ၏ Gmail ရိုက်ထည့်ပါ:");
-            if(!email) return;
-            
-            const snap = await db.collection("Users").where("email", "==", email.trim()).get();
-            if(snap.empty) return alert("အသုံးပြုသူ ရှာမတွေ့ပါ။");
-            
-            const friend = snap.docs[0].data();
-            if(friend.uid === me.uid) return alert("ကိုယ့်ကိုယ်ကို ပေါင်း၍မရပါ။");
+    function openSearchModal() {
+      openGlobalModal("Search User", "Search by registered Gmail", "Go Chat", (emailInput) => {
+        const email = emailInput.trim().toLowerCase();
+        if (!email) return;
+        searchAndOpenChat(email);
+      });
+    }
 
-            // ပေါင်းထည့်သူရော၊ အပေါင်းခံရသူရော နှစ်ဘက်စလုံးမှာ Friend စာရင်းထဲပေါ်အောင်လုပ်ခြင်း
-            const myInfo = (await db.collection("Users").doc(me.uid).get()).data();
-            
-            await db.collection("Users").doc(me.uid).collection("Friends").doc(friend.uid).set(friend);
-            await db.collection("Users").doc(friend.uid).collection("Friends").doc(me.uid).set(myInfo);
-            
-            alert("ပေါင်းထည့်ပြီးပါပြီ။");
-        }
+    // MUTUAL FRIEND ADD LOGIC (Atomicity Requirement verified)
+    function searchAndAddFriend(email) {
+      showToast("Searching for user...");
 
-        // --- Profile ---
-        async function renderProfile() {
-            const area = document.getElementById('main-content');
-            const doc = await db.collection("Users").doc(me.uid).get();
-            const d = doc.data();
+      db.collection("Users").where("email", "==", email).get()
+        .then((snapshot) => {
+          if (snapshot.empty) {
+            showToast("No user found with that Gmail address.");
+            return;
+          }
 
-            area.innerHTML = `
-                <div class="profile-container">
-                    <div class="profile-img">${d.name[0]}</div>
-                    <div class="p-name">${d.name}</div>
-                    <div class="p-email">${d.email}</div>
-                    
-                    <div class="p-card">
-                        <div style="color:var(--text-sub); font-size:12px;">User ID</div>
-                        <div style="font-weight:700; font-size:13px;">${d.uid}</div>
-                    </div>
+          // Found match
+          const targetDoc = snapshot.docs[0];
+          const targetUser = targetDoc.data();
+          const me = auth.currentUser;
 
-                    <button class="logout-btn" onclick="auth.signOut()">Logout ထွက်မည်</button>
-                </div>
-            `;
-        }
+          // Double sub-collection safe writing inside active Firestore schemas 
+          const myFriendRef = db.collection("Users").doc(me.uid).collection("Friends").doc(targetUser.uid);
+          const targetsFriendRef = db.collection("Users").doc(targetUser.uid).collection("Friends").doc(me.uid);
 
-        // --- Chat Logic ---
-        function openChat(uid, name) {
-            activeFriend = { uid, name };
-            document.getElementById('chat-screen').classList.remove('hidden');
-            document.getElementById('c-name').innerText = name;
-            document.getElementById('c-avatar').innerText = name[0];
-            
-            const roomId = me.uid > uid ? me.uid + "_" + uid : uid + "_" + me.uid;
-            db.collection("Chats").doc(roomId).collection("Messages").orderBy("timestamp", "asc").onSnapshot(snap => {
-                const list = document.getElementById('msg-list');
-                list.innerHTML = '';
-                snap.forEach(doc => {
-                    const m = doc.data();
-                    const cls = m.senderId === me.uid ? 'sent' : 'recv';
-                    list.innerHTML += `<div class="bubble ${cls}">${m.message}</div>`;
-                });
-                list.scrollTop = list.scrollHeight;
-            });
-        }
+          const batch = db.batch();
 
-        async function sendMsg() {
-            const inp = document.getElementById('msg-inp');
-            const msg = inp.value.trim();
-            if(!msg || !activeFriend) return;
+          // User A adds User B
+          batch.set(myFriendRef, {
+            uid: targetUser.uid,
+            name: targetUser.name,
+            email: targetUser.email,
+            fcmToken: targetUser.fcmToken || ""
+          });
 
-            const roomId = me.uid > activeFriend.uid ? me.uid + "_" + activeFriend.uid : activeFriend.uid + "_" + me.uid;
-            const time = Date.now();
-            
-            await db.collection("Chats").doc(roomId).collection("Messages").add({
-                senderId: me.uid, message: msg, timestamp: time
-            });
+          // User B adds User A (MUTUAL TRIGGER)
+          batch.set(targetsFriendRef, {
+            uid: me.uid,
+            name: currentUserData.name,
+            email: currentUserData.email,
+            fcmToken: currentUserData.fcmToken || ""
+          });
 
-            // Update Recent Chats
-            const myInfo = (await db.collection("Users").doc(me.uid).get()).data();
-            const friendInfo = (await db.collection("Users").doc(activeFriend.uid).get()).data();
+          return batch.commit().then(() => {
+            showToast(`Successfully added ${targetUser.name} to Friends!`);
+          });
+        })
+        .catch(err => {
+          showToast("Operation failed: " + err.message);
+        });
+    }
 
-            await db.collection("Users").doc(me.uid).collection("RecentChats").doc(activeFriend.uid).set({...friendInfo, lastMsg: msg, timestamp: time});
-            await db.collection("Users").doc(activeFriend.uid).collection("RecentChats").doc(me.uid).set({...myInfo, lastMsg: msg, timestamp: time});
+    // Easy Search Helper directly opening Conversation threads
+    function searchAndOpenChat(email) {
+      db.collection("Users").where("email", "==", email).get()
+        .then((snapshot) => {
+          if (snapshot.empty) {
+            showToast("User not found.");
+            return;
+          }
+          const target = snapshot.docs[0].data();
+          openChatRoom(target.uid, target.name, target.fcmToken);
+        });
+    }
 
-            // Native Noti Bridge
-            if(window.Android) {
-                window.Android.sendNoti(friendInfo.fcmToken || "", myInfo.name, msg);
-            }
-            
-            inp.value = '';
-        }
+    // ACTIVE CHAT ROOM LOGIC (Room management inside SPA structures)
+    function openChatRoom(uid, name, fcmToken) {
+      activeChatTarget = { uid, name, fcmToken };
 
-        function closeChat() { document.getElementById('chat-screen').classList.add('hidden'); }
+      // Bind dynamic Header variables
+      document.getElementById("chat-active-name").innerText = name;
+      document.getElementById("chat-active-avatar").innerText = name.charAt(0).toUpperCase();
 
-        function makeCall(type) {
-            if(window.Android && activeFriend) {
-                window.Android.startCall(activeFriend.uid, type, activeFriend.name);
-            } else { alert("Calling works in Native App only"); }
-        }
-    </script>
+      // UI Screen Transition
+      showScreen("chat-room-screen");
+
+      // Pull up live Message Streams using structural composite IDs
+      const conversationId = getConversationId(auth.currentUser.uid, uid);
+
+      if (activeRoomMessagesUnsubscribe) {
+        activeRoomMessagesUnsubscribe();
+      }
+
+      activeRoomMessagesUnsubscribe = db.collection("Conversations").doc(conversationId)
+        .collection("Messages")
+        .orderBy("timestamp", "asc")
+        .onSnapshot((snapshot) => {
+          renderChatRoomMessages(snapshot);
+        }, (error) => {
+          console.error("Messages Sync Lost", error);
+        });
+    }
+
+    function exitChatRoom() {
+      if (activeRoomMessagesUnsubscribe) {
+        activeRoomMessagesUnsubscribe();
+        activeRoomMessagesUnsubscribe = null;
+      }
+      activeChatTarget = null;
+      // Drop screen state back to active Navigation Tab view
+      switchNavTab(currentNavTab);
+    }
+
+    // Dynamic Conversation Key generator based on structural alphabetical sorting order
+    function getConversationId(uid1, uid2) {
+      return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
+    }
+
+    // Render Room messages loop
+    function renderChatRoomMessages(snapshot) {
+      const container = document.getElementById("chat-messages-container");
+      container.innerHTML = "";
+
+      if (snapshot.empty) {
+        container.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 40px;">
+             No messages here yet. Say Hi! 👋
+          </div>
+        `;
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const msg = doc.data();
+        const me = auth.currentUser;
+        const isSent = msg.senderId === me.uid;
+        const rowClass = isSent ? "sent" : "received";
+        const cleanTime = msg.timestamp ? formatTime(msg.timestamp.toDate()) : "now";
+
+        const row = document.createElement("div");
+        row.className = `message-row ${rowClass}`;
+        row.innerHTML = `
+          <div class="message-bubble">
+            ${escapeHTML(msg.content)}
+            <span class="message-timestamp">${cleanTime}</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      // Smooth scroll to target view limit
+      setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+      }, 50);
+    }
+
+    // REAL-TIME MESSAGE WRITER EXECUTOR
+    function sendActiveMessage() {
+      const input = document.getElementById("chat-message-input");
+      const text = input.value.trim();
+      if (!text || !activeChatTarget) return;
+
+      const me = auth.currentUser;
+      const target = activeChatTarget;
+      const conversationId = getConversationId(me.uid, target.uid);
+      const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+
+      const messageObj = {
+        senderId: me.uid,
+        receiverId: target.uid,
+        content: text,
+        timestamp: timestamp
+      };
+
+      // Wipe interface input ready for next keypresses
+      input.value = "";
+
+      // 1. Publish into Messages stream sub-collection
+      db.collection("Conversations").doc(conversationId)
+        .collection("Messages").add(messageObj)
+        .then(() => {
+          // 2. Perform Dynamic Atomic updates inside Recent Chats schemas for BOTH target sessions
+          const batch = db.batch();
+
+          // My updates
+          const myRecentRef = db.collection("Users").doc(me.uid).collection("RecentChats").doc(target.uid);
+          batch.set(myRecentRef, {
+            uid: target.uid,
+            name: target.name,
+            lastMessage: text,
+            timestamp: timestamp,
+            fcmToken: target.fcmToken || ""
+          }, { merge: true });
+
+          // Target updates
+          const targetRecentRef = db.collection("Users").doc(target.uid).collection("RecentChats").doc(me.uid);
+          batch.set(targetRecentRef, {
+            uid: me.uid,
+            name: currentUserData.name,
+            lastMessage: text,
+            timestamp: timestamp,
+            fcmToken: currentUserData.fcmToken || ""
+          }, { merge: true });
+
+          return batch.commit();
+        })
+        .then(() => {
+          // 3. Trigger Native WebView Notification Dispatcher via Android Bridge implementation
+          if (target.fcmToken) {
+            triggerNativeNotification(target.fcmToken, currentUserData.name, text);
+          }
+        })
+        .catch(err => {
+          console.error("Transmission error occurred.", err);
+          showToast("Failed to deliver message.");
+        });
+    }
+
+    // Keyboard support layout configurations
+    document.getElementById("chat-message-input").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        sendActiveMessage();
+      }
+    });
+
+    // Helper: Escape Special HTML tags safely
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag)
+      );
+    }
+
+    // Helper: Beautify JavaScript timestamp logs
+    function formatTime(date) {
+      let hours = date.getHours();
+      let minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; // convert 0 to 12
+      minutes = minutes < 10 ? '0'+minutes : minutes;
+      return `${hours}:${minutes} ${ampm}`;
+    }
+  </script>
 </body>
 </html>
