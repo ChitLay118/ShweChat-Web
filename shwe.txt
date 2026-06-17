@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ShweChat</title>
+  
+  <!-- Inter & Padauk (မြန်မာစာအတွက် အကောင်းဆုံး Font) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary-color: #2481cc; /* Telegram Blue */
+      --primary-dark: #1d71b3;
+      --bg-color: #f0f2f5;
+      --card-bg: #ffffff;
+      --text-main: #1c2434;
+      --text-muted: #7e8b9b;
+      --border-color: #e4e8ec;
+      --bubble-sent: #e1f3fc;
+      --bubble-sent-text: #0b1f35;
+      --bubble-received: #ffffff;
+      --bubble-received-text: #1c2434;
+      --online-color: #4caf50;
+      --safe-area-top: env(safe-area-inset-top, 0px);
+      --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', 'Padauk', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Main Container setup */
+    #app-container {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-color);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Viewport Area */
+    #screen-viewport {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Screens setup */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      background-color: var(--bg-color);
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* Headers */
+    .app-header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: calc(14px + var(--safe-area-top)) 16px 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .app-header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .header-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-btn:active {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Premium login interface card */
+    #auth-screen {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      z-index: 99999; /* Ensure it stays completely on top during login */
+    }
+
+    .auth-card {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(10px);
+      width: 100%;
+      max-width: 360px;
+      border-radius: 24px;
+      padding: 30px 24px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .auth-logo i {
+      font-size: 44px;
+      color: var(--primary-color);
+      margin-bottom: 8px;
+    }
+
+    .auth-logo h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1e3c72;
+    }
+
+    .auth-logo p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #5c6873;
+      text-transform: uppercase;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+      background-color: #fcfdfe;
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .auth-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(36, 129, 204, 0.3);
+      transition: all 0.2s;
+    }
+
+    .auth-btn:disabled {
+      background-color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .auth-toggle-link {
+      text-align: center;
+      font-size: 13px;
+      color: var(--primary-color);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    /* Screen Inner Contents */
+    .main-screen-content {
+      flex: 1;
+      overflow-y: auto;
+      background-color: var(--bg-color);
+      padding-bottom: 12px;
+    }
+
+    /* Bulletproof Bottom Navigation Fixed Placement */
+    .bottom-nav {
+      width: 100%;
+      height: calc(60px + var(--safe-area-bottom));
+      background-color: #ffffff;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: var(--safe-area-bottom);
+      z-index: 10000; /* Stays above screens completely */
+      box-shadow: 0 -3px 12px rgba(0,0,0,0.05);
+      flex-shrink: 0;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      width: 33.33%;
+      height: 100%;
+      gap: 3px;
+      transition: color 0.15s ease;
+    }
+
+    .nav-item i {
+      font-size: 18px;
+    }
+
+    .nav-item span {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .nav-item.active {
+      color: var(--primary-color);
+    }
+
+    /* Lists rendering */
+    .list-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background-color: var(--card-bg);
+      border-bottom: 1px solid #f5f6f8;
+      cursor: pointer;
+    }
+
+    .list-item:active {
+      background-color: #f0f4f8;
+    }
+
+    .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      margin-right: 14px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .avatar.online::after {
+      content: '';
+      position: absolute;
+      bottom: 1px;
+      right: 1px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background-color: var(--online-color);
+      border: 2px solid white;
+    }
+
+    .item-details {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .item-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-time {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .item-subtext {
+      font-size: 13px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Floating Action Button (FAB) */
+    .fab {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 16px rgba(36, 129, 204, 0.4);
+      cursor: pointer;
+      z-index: 999;
+    }
+
+    .fab:active {
+      transform: scale(0.95);
+    }
+
+    /* Chat Room Screen */
+    #chat-room-screen {
+      z-index: 15000; /* Stays fully on top of standard screens when open */
+      background-color: #e5ddd5;
+    }
+
+    .chat-room-header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: calc(10px + var(--safe-area-top)) 12px 10px 12px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .back-btn {
+      font-size: 18px;
+      color: white;
+      background: none;
+      border: none;
+      padding: 8px;
+      margin-right: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chat-header-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-header-meta {
+      min-width: 0;
+    }
+
+    .chat-header-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-header-status {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .chat-room-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    /* Messages Area */
+    .chat-messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message-row {
+      display: flex;
+      width: 100%;
+    }
+
+    .message-row.sent {
+      justify-content: flex-end;
+    }
+
+    .message-row.received {
+      justify-content: flex-start;
+    }
+
+    .message-bubble {
+      max-width: 75%;
+      padding: 8px 12px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.4;
+      position: relative;
+      word-wrap: break-word;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .message-row.sent .message-bubble {
+      background-color: var(--bubble-sent);
+      color: var(--bubble-sent-text);
+      border-top-right-radius: 2px;
+    }
+
+    .message-row.received .message-bubble {
+      background-color: var(--bubble-received);
+      color: var(--bubble-received-text);
+      border-top-left-radius: 2px;
+    }
+
+    .message-timestamp {
+      display: block;
+      font-size: 9px;
+      color: var(--text-muted);
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    /* Input Tray */
+    .chat-input-bar {
+      background-color: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 8px 12px calc(8px + var(--safe-area-bottom)) 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .chat-input {
+      flex: 1;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-size: 14px;
+      outline: none;
+      background-color: #f8f9fa;
+    }
+
+    .send-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Profile view */
+    .profile-card {
+      background-color: var(--card-bg);
+      margin: 16px;
+      border-radius: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      font-size: 32px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .profile-info {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .profile-field {
+      border-bottom: 1.5px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .profile-field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .profile-field-value {
+      font-size: 14px;
+      color: var(--text-main);
+      font-weight: 500;
+      margin-top: 4px;
+    }
+
+    .logout-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    /* Dialog Modals */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background-color: white;
+      border-radius: 20px;
+      padding: 20px;
+      width: 100%;
+      max-width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .modal-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .modal-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .modal-btn.cancel {
+      background-color: transparent;
+      color: var(--text-muted);
+    }
+
+    .modal-btn.confirm {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    /* Bulletproof Self-Cleaning Toast System styling */
+    .toast {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: rgba(28, 36, 52, 0.95);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 1000000; /* Must stay on top of everything */
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+      opacity: 0;
+      display: none;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 260px;
+      color: var(--text-muted);
+      gap: 12px;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .empty-state i {
+      font-size: 40px;
+      color: var(--border-color);
+    }
+
+    .empty-state p {
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- Self-Cleaning Toast Element -->
+    <div id="toast-notif" class="toast">အောင်မြင်ပါသည်</div>
+
+    <!-- 1. AUTH SCREEN -->
+    <div id="auth-screen" class="screen active">
+      <div class="auth-card">
+        <div class="auth-logo">
+          <i class="fa-solid fa-comments"></i>
+          <h2 id="auth-title">ShweChat မှ ကြိုဆိုပါသည်</h2>
+          <p id="auth-subtitle">အကောင့်ဝင်ရောက်ပြီး စကားပြောဆိုလိုက်ပါ</p>
+        </div>
+
+        <div class="form-group" id="reg-name-group" style="display: none;">
+          <label>နာမည်အပြည့်အစုံ</label>
+          <input type="text" id="auth-name" placeholder="နာမည်ရေးရန်">
+        </div>
+
+        <div class="form-group">
+          <label>ဂျီမေးလ်လိပ်စာ (Gmail)</label>
+          <input type="email" id="auth-email" placeholder="example@gmail.com">
+        </div>
+
+        <div class="form-group">
+          <label>လျှို့ဝှက်နံပါတ် (Password)</label>
+          <input type="password" id="auth-password" placeholder="အနည်းဆုံး ၆ လုံး">
+        </div>
+
+        <button class="auth-btn" id="auth-submit-btn">အကောင့်ဝင်ရန်</button>
+        <div class="auth-toggle-link" id="auth-toggle-btn">အကောင့်အသစ်ဖွင့်ရန်နှိပ်ပါ</div>
+      </div>
+    </div>
+
+    <!-- SCREEN VIEWPORT -->
+    <div id="screen-viewport">
+
+      <!-- 2. CHATS TAB -->
+      <div id="chats-screen" class="screen">
+        <header class="app-header">
+          <h1>ShweChat</h1>
+          <div class="app-header-actions">
+            <button class="header-btn" onclick="openSearchModal()"><i class="fa-solid fa-magnifying-glass"></i></button>
+          </div>
+        </header>
+
+        <div class="main-screen-content">
+          <div id="chats-list" class="list-container">
+            <!-- Recent Chats injection -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. FRIENDS TAB -->
+      <div id="friends-screen" class="screen">
+        <header class="app-header">
+          <h1>သူငယ်ချင်းများ</h1>
+          <div class="app-header-actions">
+            <button class="header-btn" onclick="openAddFriendModal()"><i class="fa-solid fa-user-plus"></i></button>
+          </div>
+        </header>
+
+        <div class="main-screen-content">
+          <div id="friends-list" class="list-container">
+            <!-- Friends List injection -->
+          </div>
+        </div>
+
+        <div class="fab" onclick="openAddFriendModal()">
+          <i class="fa-solid fa-user-plus"></i>
+        </div>
+      </div>
+
+      <!-- 4. PROFILE TAB -->
+      <div id="profile-screen" class="screen">
+        <header class="app-header">
+          <h1>ကျွန်ုပ်၏ အကောင့်</h1>
+        </header>
+
+        <div class="main-screen-content">
+          <div class="profile-card">
+            <div id="profile-avatar-circle" class="profile-avatar">U</div>
+            <div class="profile-info">
+              <div class="profile-field">
+                <div class="profile-field-label">နာမည်</div>
+                <div id="profile-name-val" class="profile-field-value">-</div>
+              </div>
+              <div class="profile-field">
+                <div class="profile-field-label">ဂျီမေးလ်</div>
+                <div id="profile-email-val" class="profile-field-value">-</div>
+              </div>
+              <div class="profile-field">
+                <div class="profile-field-label">အသုံးပြုသူနံပါတ် (UID)</div>
+                <div id="profile-uid-val" class="profile-field-value">-</div>
+              </div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">အကောင့်ထွက်ရန်</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 5. CHAT ROOM SCREEN -->
+    <div id="chat-room-screen" class="screen">
+      <header class="chat-room-header">
+        <button class="back-btn" onclick="exitChatRoom()"><i class="fa-solid fa-arrow-left"></i></button>
+        <div class="chat-header-info">
+          <div id="chat-active-avatar" class="avatar" style="width: 36px; height: 36px; margin-right: 0; font-size: 14px;">C</div>
+          <div class="chat-header-meta">
+            <div id="chat-active-name" class="chat-header-name">မသိသေးပါ...</div>
+            <div id="chat-active-status" class="chat-header-status">အွန်လိုင်း</div>
+          </div>
+        </div>
+        <div class="chat-room-actions">
+          <button class="header-btn" onclick="initiateBridgeCall('voice')"><i class="fa-solid fa-phone"></i></button>
+          <button class="header-btn" onclick="initiateBridgeCall('video')"><i class="fa-solid fa-video"></i></button>
+        </div>
+      </header>
+
+      <div class="chat-messages-area" id="chat-messages-container"></div>
+
+      <div class="chat-input-bar">
+        <input type="text" id="chat-message-input" class="chat-input" placeholder="စာတိုရေးရန်..." autocomplete="off">
+        <button class="send-btn" onclick="sendActiveMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="bottom-nav" id="main-nav-bar" style="display: none;">
+      <div class="nav-item active" onclick="switchNavTab('chats')" id="nav-chats">
+        <i class="fa-solid fa-message"></i>
+        <span>မက်ဆေ့ခ်ျ</span>
+      </div>
+      <div class="nav-item" onclick="switchNavTab('friends')" id="nav-friends">
+        <i class="fa-solid fa-users"></i>
+        <span>သူငယ်ချင်း</span>
+      </div>
+      <div class="nav-item" onclick="switchNavTab('profile')" id="nav-profile">
+        <i class="fa-solid fa-user"></i>
+        <span>ကျွန်ုပ်</span>
+      </div>
+    </nav>
+
+    <!-- GENERIC MODAL OVERLAY -->
+    <div class="modal-overlay" id="global-modal">
+      <div class="modal-box">
+        <div class="modal-title" id="modal-box-title">သူငယ်ချင်းအသစ်ထည့်မည်</div>
+        <input type="text" id="modal-box-input" class="modal-input" placeholder="">
+        <div class="modal-actions">
+          <button class="modal-btn cancel" onclick="closeGlobalModal()">မလုပ်တော့ပါ</button>
+          <button class="modal-btn confirm" id="modal-box-action-btn">အတည်ပြုမည်</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Firebase Legacy SDK v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script>
+    // FIREBASE HARDCODED CONFIG
+    const firebaseConfig = {
+      apiKey: "AIzaSyD355MSuzGQ70An7M7rdG8APTqk-xtgFoM",
+      authDomain: "shwechatmm.firebaseapp.com",
+      projectId: "shwechatmm",
+      storageBucket: "shwechatmm.firebasestorage.app",
+      messagingSenderId: "904518107602",
+      appId: "1:904518107602:android:89231af7657c3ded44880b"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // STRICT STORAGE APP PATHS (RULE 1 Compliance)
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'shwechatmm';
+
+    // Application state
+    let currentUserData = null;
+    let activeChatTarget = null;
+    let authMode = "login";
+    let currentNavTab = "chats";
+
+    // Firestore streams references
+    let activeChatsSnapshotUnsubscribe = null;
+    let activeFriendsSnapshotUnsubscribe = null;
+    let activeRoomMessagesUnsubscribe = null;
+
+    // Bulletproof Self-Cleaning Toast System
+    let toastTimeout = null;
+    let toastHideTimeout = null;
+    
+    function showToast(message) {
+      const toast = document.getElementById("toast-notif");
+      toast.innerText = message;
+      
+      // Clear any pending timeouts
+      if (toastTimeout) clearTimeout(toastTimeout);
+      if (toastHideTimeout) clearTimeout(toastHideTimeout);
+
+      // Instantly make it active
+      toast.style.display = "block";
+      // Force layout reflow to ensure transition registers
+      toast.offsetHeight; 
+      
+      toast.style.opacity = "1";
+      toast.style.transform = "translateX(-50%) translateY(0)";
+
+      // Setup clean fade out
+      toastTimeout = setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(-50%) translateY(100px)";
+        
+        toastHideTimeout = setTimeout(() => {
+          if (toast.style.opacity === "0") {
+            toast.style.display = "none";
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    // Modal dialogs setup
+    function openGlobalModal(title, placeholder, confirmBtnText, onConfirmCallback) {
+      const overlay = document.getElementById("global-modal");
+      const titleEl = document.getElementById("modal-box-title");
+      const inputEl = document.getElementById("modal-box-input");
+      const actionBtn = document.getElementById("modal-box-action-btn");
+
+      titleEl.innerText = title;
+      inputEl.placeholder = placeholder;
+      inputEl.value = "";
+      actionBtn.innerText = confirmBtnText;
+
+      actionBtn.onclick = () => {
+        onConfirmCallback(inputEl.value);
+        closeGlobalModal();
+      };
+
+      overlay.classList.add("active");
+    }
+
+    function closeGlobalModal() {
+      document.getElementById("global-modal").classList.remove("active");
+    }
+
+    // Android Native Bridge bindings
+    function initiateBridgeCall(type) {
+      if (!activeChatTarget) return;
+      const targetUid = activeChatTarget.uid;
+      const targetName = activeChatTarget.name;
+
+      showToast(`${targetName} ထံ ဖုန်းခေါ်ဆိုနေပါသည်...`);
+      
+      if (window.Android && typeof window.Android.startCall === 'function') {
+        try {
+          window.Android.startCall(targetUid, type, targetName);
+        } catch (e) {
+          console.error("Bridge failure:", e);
+        }
+      } else {
+        console.warn("Android startCall invoked (No Native interface detected).");
+      }
+    }
+
+    function triggerNativeNotification(targetToken, senderName, message) {
+      if (!targetToken) return;
+      if (window.Android && typeof window.Android.sendNoti === 'function') {
+        try {
+          window.Android.sendNoti(targetToken, senderName, message);
+        } catch (e) {
+          console.error("Bridge notification failure:", e);
+        }
+      } else {
+        console.log("FCM Notification routed:", targetToken);
+      }
+    }
+
+    // Global hook for Java Android bridge input integration
+    window.updateFCMToken = function(token) {
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Users').doc(user.uid);
+        userRef.update({ fcmToken: token })
+          .then(() => showToast("FCM Token ကို အောင်မြင်စွာ ချိတ်ဆက်ပြီးပါပြီ"))
+          .catch(err => console.error("FCM integration error", err));
+      }
+    };
+
+    // Screens transitions helper
+    function showScreen(screenId) {
+      document.querySelectorAll(".screen").forEach(screen => {
+        screen.classList.remove("active");
+      });
+      document.getElementById(screenId).classList.add("active");
+    }
+
+    // Nav bar controller
+    function switchNavTab(tabName) {
+      currentNavTab = tabName;
+      document.querySelectorAll(".nav-item").forEach(item => {
+        item.classList.remove("active");
+      });
+      const navItem = document.getElementById(`nav-${tabName}`);
+      if (navItem) navItem.classList.add("active");
+      
+      if (tabName === "chats") {
+        showScreen("chats-screen");
+      } else if (tabName === "friends") {
+        showScreen("friends-screen");
+      } else if (tabName === "profile") {
+        showScreen("profile-screen");
+      }
+    }
+
+    // Auth screen layout swapper
+    document.getElementById("auth-toggle-btn").addEventListener("click", () => {
+      const regNameGroup = document.getElementById("reg-name-group");
+      const authTitle = document.getElementById("auth-title");
+      const authSubtitle = document.getElementById("auth-subtitle");
+      const submitBtn = document.getElementById("auth-submit-btn");
+      const toggleBtn = document.getElementById("auth-toggle-btn");
+
+      if (authMode === "login") {
+        authMode = "register";
+        regNameGroup.style.display = "flex";
+        authTitle.innerText = "အကောင့်အသစ်ဖွင့်ပါ";
+        authSubtitle.innerText = "သူငယ်ချင်းများနှင့် ချက်ချင်း စကားပြောလိုက်ပါ";
+        submitBtn.innerText = "အကောင့်ဖွင့်မည်";
+        toggleBtn.innerText = "အကောင့်ရှိပြီးသားလား? အကောင့်ဝင်ရန်နှိပ်ပါ";
+      } else {
+        authMode = "login";
+        regNameGroup.style.display = "none";
+        authTitle.innerText = "ShweChat မှ ကြိုဆိုပါသည်";
+        authSubtitle.innerText = "အကောင့်ဝင်ရောက်ပြီး စကားပြောဆိုလိုက်ပါ";
+        submitBtn.innerText = "အကောင့်ဝင်ရန်";
+        toggleBtn.innerText = "အကောင့်အသစ်ဖွင့်ရန်နှိပ်ပါ";
+      }
+    });
+
+    // Reset Auth Button State
+    function setAuthBtnLoading(isLoading, text) {
+      const submitBtn = document.getElementById("auth-submit-btn");
+      if (isLoading) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = text;
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.innerText = authMode === "login" ? "အကောင့်ဝင်ရန်" : "အကောင့်ဖွင့်မည်";
+      }
+    }
+
+    // Sign in executor
+    document.getElementById("auth-submit-btn").addEventListener("click", () => {
+      const email = document.getElementById("auth-email").value.trim();
+      const password = document.getElementById("auth-password").value;
+      const name = document.getElementById("auth-name").value.trim();
+
+      if (!email || !password) {
+        showToast("အချက်အလက်များကို ဖြည့်သွင်းပေးပါရန်။");
+        return;
+      }
+
+      setAuthBtnLoading(true, "ခေတ္တစောင့်ဆိုင်းပါ...");
+
+      if (authMode === "register") {
+        if (!name) {
+          showToast("နာမည် ထည့်သွင်းပေးပါရန်။");
+          setAuthBtnLoading(false);
+          return;
+        }
+
+        auth.createUserWithEmailAndPassword(email, password)
+          .then((userCredential) => {
+            const user = userCredential.user;
+            return db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Users').doc(user.uid).set({
+              uid: user.uid,
+              name: name,
+              email: email.toLowerCase(),
+              profilePic: "", 
+              fcmToken: ""
+            });
+          })
+          .then(() => {
+            showToast("အကောင့်ဖွင့်ခြင်း အောင်မြင်ပါသည်။");
+          })
+          .catch((error) => {
+            showToast(error.message);
+            setAuthBtnLoading(false);
+          });
+
+      } else {
+        auth.signInWithEmailAndPassword(email, password)
+          .then(() => {
+            showToast("ကြိုဆိုပါသည်!");
+          })
+          .catch((error) => {
+            showToast(error.message);
+            setAuthBtnLoading(false);
+          });
+      }
+    });
+
+    // Live update profile values
+    function updateProfileUI() {
+      if (!currentUserData) return;
+      document.getElementById("profile-name-val").innerText = currentUserData.name || "-";
+      document.getElementById("profile-email-val").innerText = currentUserData.email || "-";
+      document.getElementById("profile-uid-val").innerText = currentUserData.uid || "-";
+      document.getElementById("profile-avatar-circle").innerText = (currentUserData.name || "U").charAt(0).toUpperCase();
+    }
+
+    // Session status changes hook
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        // INSTANT TRANSITION TO MAIN UI (Bypasses Firestore wait to prevent login getting stuck)
+        document.getElementById("auth-screen").classList.remove("active");
+        document.getElementById("main-nav-bar").style.display = "flex";
+        switchNavTab("chats");
+        setAuthBtnLoading(false);
+
+        // Fetch / Create User Node in Background
+        const userRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Users').doc(user.uid);
+        userRef.get()
+          .then((doc) => {
+            if (doc.exists) {
+              currentUserData = doc.data();
+              updateProfileUI();
+              startRealtimeListeners(user.uid);
+            } else {
+              // Build clean record instantly
+              const nameFallback = user.email ? user.email.split('@')[0] : "User";
+              const fallbackData = {
+                uid: user.uid,
+                name: nameFallback,
+                email: user.email ? user.email.toLowerCase() : "",
+                profilePic: "",
+                fcmToken: ""
+              };
+              userRef.set(fallbackData).then(() => {
+                currentUserData = fallbackData;
+                updateProfileUI();
+                startRealtimeListeners(user.uid);
+              }).catch(err => console.error("Database initialization failed:", err));
+            }
+          })
+          .catch((err) => {
+            console.error("Firestore loading error:", err);
+            // Standby mock profile if network restricts firestore
+            currentUserData = {
+              uid: user.uid,
+              name: user.email ? user.email.split('@')[0] : "User",
+              email: user.email || ""
+            };
+            updateProfileUI();
+            startRealtimeListeners(user.uid);
+          });
+      } else {
+        currentUserData = null;
+        stopRealtimeListeners();
+        document.getElementById("main-nav-bar").style.display = "none";
+        showScreen("auth-screen");
+        document.getElementById("auth-screen").classList.add("active");
+        setAuthBtnLoading(false);
+      }
+    });
+
+    // Sign out method
+    function handleLogout() {
+      auth.signOut()
+        .then(() => showToast("အကောင့်ထွက်လိုက်ပါပြီ။"))
+        .catch(err => showToast("ထွက်၍မရပါ- " + err.message));
+    }
+
+    // Dynamic Real-time stream controllers
+    function startRealtimeListeners(userId) {
+      stopRealtimeListeners();
+
+      // Listener 1: Safe Private Recent Chats Sub-collection
+      const recentChatsRef = db.collection('artifacts').doc(appId).collection('users').doc(userId).collection('RecentChats');
+      activeChatsSnapshotUnsubscribe = recentChatsRef.onSnapshot((snapshot) => {
+        const chatList = [];
+        snapshot.forEach(doc => {
+          chatList.push(doc.data());
+        });
+        chatList.sort((a, b) => {
+          const tA = a.timestamp?.seconds || 0;
+          const tB = b.timestamp?.seconds || 0;
+          return tB - tA;
+        });
+        renderRecentChatsList(chatList);
+      }, (error) => {
+        console.error("Chats feed error", error);
+      });
+
+      // Listener 2: Safe Private Friends Sub-collection
+      const friendsRef = db.collection('artifacts').doc(appId).collection('users').doc(userId).collection('Friends');
+      activeFriendsSnapshotUnsubscribe = friendsRef.onSnapshot((snapshot) => {
+        const friendsList = [];
+        snapshot.forEach(doc => {
+          friendsList.push(doc.data());
+        });
+        renderFriendsList(friendsList);
+      }, (error) => {
+        console.error("Friends feed error", error);
+      });
+    }
+
+    function stopRealtimeListeners() {
+      if (activeChatsSnapshotUnsubscribe) {
+        activeChatsSnapshotUnsubscribe();
+        activeChatsSnapshotUnsubscribe = null;
+      }
+      if (activeFriendsSnapshotUnsubscribe) {
+        activeFriendsSnapshotUnsubscribe();
+        activeFriendsSnapshotUnsubscribe = null;
+      }
+      if (activeRoomMessagesUnsubscribe) {
+        activeRoomMessagesUnsubscribe();
+        activeRoomMessagesUnsubscribe = null;
+      }
+    }
+
+    // Recent chats render UI
+    function renderRecentChatsList(chatList) {
+      const container = document.getElementById("chats-list");
+      container.innerHTML = "";
+
+      if (chatList.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fa-solid fa-message-slash"></i>
+            <p>စကားပြောထားသည့်မှတ်တမ်းမရှိသေးပါ။<br>သူငယ်ချင်းရှာပြီး စာတိုပေးပို့လိုက်ပါ!</p>
+          </div>
+        `;
+        return;
+      }
+
+      chatList.forEach(data => {
+        const firstLetter = data.name ? data.name.charAt(0).toUpperCase() : "?";
+        const cleanTime = data.timestamp ? formatTime(data.timestamp.toDate()) : "ယခု";
+
+        const div = document.createElement("div");
+        div.className = "list-item";
+        div.onclick = () => openChatRoom(data.uid, data.name, data.fcmToken);
+
+        div.innerHTML = `
+          <div class="avatar">${firstLetter}</div>
+          <div class="item-details">
+            <div class="item-row">
+              <span class="item-name">${data.name}</span>
+              <span class="item-time">${cleanTime}</span>
+            </div>
+            <div class="item-subtext">${escapeHTML(data.lastMessage || "")}</div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Friends list render UI
+    function renderFriendsList(friendsList) {
+      const container = document.getElementById("friends-list");
+      container.innerHTML = "";
+
+      if (friendsList.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fa-solid fa-user-group"></i>
+            <p>ထည့်ထားသောသူငယ်ချင်းများမရှိသေးပါ။<br>အပေါ်ရှိအပေါင်းလက္ခဏာကိုနှိပ်ပြီး ဂျီမေးလ်ဖြင့်ရှာဖွေပါ!</p>
+          </div>
+        `;
+        return;
+      }
+
+      friendsList.forEach(data => {
+        const firstLetter = data.name ? data.name.charAt(0).toUpperCase() : "?";
+
+        const div = document.createElement("div");
+        div.className = "list-item";
+        div.onclick = () => openChatRoom(data.uid, data.name, data.fcmToken);
+
+        div.innerHTML = `
+          <div class="avatar online">${firstLetter}</div>
+          <div class="item-details">
+            <div class="item-row">
+              <span class="item-name">${data.name}</span>
+            </div>
+            <div class="item-subtext">စာတိုပေးပို့ရန် နှိပ်ပါ</div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Dialog prompts for Search & Friend Addition
+    function openAddFriendModal() {
+      openGlobalModal("သူငယ်ချင်းအသစ်ရှာဖွေမည်", "သူငယ်ချင်း၏ Gmail ထည့်ပါ", "ပေါင်းထည့်မည်", (emailInput) => {
+        const email = emailInput.trim().toLowerCase();
+        if (!email) {
+          showToast("ဂျီမေးလ်လိပ်စာ လွတ်နေပါသည်!");
+          return;
+        }
+        if (currentUserData && email === currentUserData.email) {
+          showToast("မိမိကိုယ်တိုင် ပြန်ပေါင်းထည့်၍မရပါ!");
+          return;
+        }
+        searchAndAddFriend(email);
+      });
+    }
+
+    function openSearchModal() {
+      openGlobalModal("သူငယ်ချင်းရှာမည်", "ရှာဖွေလိုသော Gmail ထည့်ပါ", "စကားပြောမည်", (emailInput) => {
+        const email = emailInput.trim().toLowerCase();
+        if (!email) return;
+        searchAndOpenChat(email);
+      });
+    }
+
+    // MUTUAL FRIEND ADD
+    function searchAndAddFriend(email) {
+      showToast("ရှာဖွေနေပါသည်...");
+
+      db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Users').get()
+        .then((snapshot) => {
+          let foundUser = null;
+          snapshot.forEach(doc => {
+            const userData = doc.data();
+            if (userData.email === email) {
+              foundUser = userData;
+            }
+          });
+
+          if (!foundUser) {
+            showToast("ရှာဖွေထားသော ဂျီမေးလ်ဖြင့် အကောင့်မရှိသေးပါ။");
+            return;
+          }
+
+          const me = auth.currentUser;
+          const myFriendRef = db.collection('artifacts').doc(appId).collection('users').doc(me.uid).collection('Friends').doc(foundUser.uid);
+          const targetsFriendRef = db.collection('artifacts').doc(appId).collection('users').doc(foundUser.uid).collection('Friends').doc(me.uid);
+
+          const batch = db.batch();
+
+          batch.set(myFriendRef, {
+            uid: foundUser.uid,
+            name: foundUser.name,
+            email: foundUser.email,
+            fcmToken: foundUser.fcmToken || ""
+          });
+
+          batch.set(targetsFriendRef, {
+            uid: me.uid,
+            name: currentUserData.name,
+            email: currentUserData.email,
+            fcmToken: currentUserData.fcmToken || ""
+          });
+
+          return batch.commit().then(() => {
+            showToast(`${foundUser.name} အား သူငယ်ချင်းအဖြစ် ထည့်သွင်းပြီးပါပြီ။`);
+          });
+        })
+        .catch(err => {
+          showToast("ပြဿနာဖြစ်ပွားပါသည်: " + err.message);
+        });
+    }
+
+    // Fast search helper
+    function searchAndOpenChat(email) {
+      db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Users').get()
+        .then((snapshot) => {
+          let foundUser = null;
+          snapshot.forEach(doc => {
+            const userData = doc.data();
+            if (userData.email === email) {
+              foundUser = userData;
+            }
+          });
+
+          if (!foundUser) {
+            showToast("အကောင့် ရှာမတွေ့ပါ။");
+            return;
+          }
+          openChatRoom(foundUser.uid, foundUser.name, foundUser.fcmToken);
+        });
+    }
+
+    // Conversation layout setup
+    function openChatRoom(uid, name, fcmToken) {
+      activeChatTarget = { uid, name, fcmToken };
+
+      document.getElementById("chat-active-name").innerText = name;
+      document.getElementById("chat-active-avatar").innerText = name.charAt(0).toUpperCase();
+
+      showScreen("chat-room-screen");
+
+      const conversationId = getConversationId(auth.currentUser.uid, uid);
+
+      if (activeRoomMessagesUnsubscribe) {
+        activeRoomMessagesUnsubscribe();
+      }
+
+      const messagesRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Conversations').doc(conversationId).collection('Messages');
+      activeRoomMessagesUnsubscribe = messagesRef.onSnapshot((snapshot) => {
+        const messagesList = [];
+        snapshot.forEach(doc => {
+          messagesList.push(doc.data());
+        });
+        messagesList.sort((a, b) => {
+          const tA = a.timestamp?.seconds || 0;
+          const tB = b.timestamp?.seconds || 0;
+          return tA - tB;
+        });
+        renderChatRoomMessages(messagesList);
+      }, (error) => {
+        console.error("Messages sync fail", error);
+      });
+    }
+
+    function exitChatRoom() {
+      if (activeRoomMessagesUnsubscribe) {
+        activeRoomMessagesUnsubscribe();
+        activeRoomMessagesUnsubscribe = null;
+      }
+      activeChatTarget = null;
+      switchNavTab(currentNavTab);
+    }
+
+    function getConversationId(uid1, uid2) {
+      return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
+    }
+
+    // Render message rows inside chat room viewport
+    function renderChatRoomMessages(messagesList) {
+      const container = document.getElementById("chat-messages-container");
+      container.innerHTML = "";
+
+      if (messagesList.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 40px;">
+             မိတ်ဆက်စကား စတင်ပြောဆိုလိုက်ပါ 👋
+          </div>
+        `;
+        return;
+      }
+
+      messagesList.forEach(msg => {
+        const me = auth.currentUser;
+        const isSent = msg.senderId === me.uid;
+        const rowClass = isSent ? "sent" : "received";
+        const cleanTime = msg.timestamp ? formatTime(msg.timestamp.toDate()) : "ယခု";
+
+        const row = document.createElement("div");
+        row.className = `message-row ${rowClass}`;
+        row.innerHTML = `
+          <div class="message-bubble">
+            ${escapeHTML(msg.content)}
+            <span class="message-timestamp">${cleanTime}</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+      }, 60);
+    }
+
+    // Message dispatch publisher
+    function sendActiveMessage() {
+      const input = document.getElementById("chat-message-input");
+      const text = input.value.trim();
+      if (!text || !activeChatTarget) return;
+
+      const me = auth.currentUser;
+      const target = activeChatTarget;
+      const conversationId = getConversationId(me.uid, target.uid);
+      const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+
+      const messageObj = {
+        senderId: me.uid,
+        receiverId: target.uid,
+        content: text,
+        timestamp: timestamp
+      };
+
+      input.value = "";
+
+      const messagesRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('Conversations').doc(conversationId).collection('Messages');
+      messagesRef.add(messageObj)
+        .then(() => {
+          const batch = db.batch();
+
+          const myRecentRef = db.collection('artifacts').doc(appId).collection('users').doc(me.uid).collection('RecentChats').doc(target.uid);
+          batch.set(myRecentRef, {
+            uid: target.uid,
+            name: target.name,
+            lastMessage: text,
+            timestamp: timestamp,
+            fcmToken: target.fcmToken || ""
+          }, { merge: true });
+
+          const targetRecentRef = db.collection('artifacts').doc(appId).collection('users').doc(target.uid).collection('RecentChats').doc(me.uid);
+          batch.set(targetRecentRef, {
+            uid: me.uid,
+            name: currentUserData.name,
+            lastMessage: text,
+            timestamp: timestamp,
+            fcmToken: currentUserData.fcmToken || ""
+          }, { merge: true });
+
+          return batch.commit();
+        })
+        .then(() => {
+          if (target.fcmToken) {
+            triggerNativeNotification(target.fcmToken, currentUserData.name, text);
+          }
+        })
+        .catch(err => {
+          console.error("Transmission error:", err);
+          showToast("မက်ဆေ့ခ်ျ ပို့၍မရပါ");
+        });
+    }
+
+    document.getElementById("chat-message-input").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        sendActiveMessage();
+      }
+    });
+
+    // Helper utilities
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag)
+      );
+    }
+
+    function formatTime(date) {
+      let hours = date.getHours();
+      let minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      minutes = minutes < 10 ? '0'+minutes : minutes;
+      return `${hours}:${minutes} ${ampm}`;
+    }
+  </script>
+</body>
+</html>
