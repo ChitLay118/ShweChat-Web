@@ -1,65 +1,426 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ShweChat Web</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Firebase SDK v8 (Maximum Compatibility) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ShweChat Premium</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        :root {
+            --primary: #0084ff;
+            --secondary: #00c6ff;
+            --bg: #f0f2f5;
+            --surface: #ffffff;
+            --text-main: #1c1e21;
+            --text-sub: #65676b;
+            --sent-bg: #0084ff;
+            --recv-bg: #e4e6eb;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; }
+        .hidden { display: none !important; }
+
+        /* --- Login/Register Screen --- */
+        #auth-screen { 
+            height: 100vh; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 20px;
+        }
+        .auth-card { 
+            background: white; width: 100%; max-width: 400px; padding: 40px 30px; 
+            border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;
+        }
+        .auth-logo { font-size: 32px; font-weight: 800; color: var(--primary); margin-bottom: 10px; }
+        .auth-sub { color: var(--text-sub); margin-bottom: 30px; font-size: 14px; }
+        .auth-input { 
+            width: 100%; padding: 14px 18px; margin-bottom: 15px; border: 1.5px solid #eee; 
+            border-radius: 12px; font-size: 16px; outline: none; transition: 0.3s;
+        }
+        .auth-input:focus { border-color: var(--primary); }
+        .auth-btn { 
+            width: 100%; padding: 15px; background: var(--primary); color: white; border: none; 
+            border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px;
+        }
+        .auth-toggle { margin-top: 20px; font-size: 14px; color: var(--text-sub); cursor: pointer; }
+        .auth-toggle span { color: var(--primary); font-weight: 700; }
+
+        /* --- Main App Layout --- */
+        .app-container { height: 100vh; display: flex; flex-direction: column; }
+        .app-header { 
+            background: var(--surface); padding: 15px 20px; display: flex; 
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd;
+        }
+        .app-header h1 { font-size: 24px; font-weight: 800; margin: 0; color: var(--primary); }
+        
+        .content-area { flex: 1; overflow-y: auto; background: var(--bg); }
+
+        /* --- Bottom Navigation --- */
+        .bottom-nav { 
+            height: 70px; background: var(--surface); display: flex; 
+            border-top: 1px solid #ddd; padding-bottom: 5px;
+        }
+        .nav-item { 
+            flex: 1; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; cursor: pointer; color: var(--text-sub); transition: 0.3s;
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 22px; margin-bottom: 2px; }
+        .nav-text { font-size: 10px; font-weight: 700; }
+
+        /* --- List UI (Chats & Friends) --- */
+        .list-card { 
+            background: var(--surface); margin: 10px; border-radius: 16px; 
+            overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .item { 
+            padding: 15px; display: flex; align-items: center; 
+            border-bottom: 1px solid #f5f5f5; transition: 0.2s;
+        }
+        .item:active { background: #f9f9f9; }
+        .avatar { 
+            width: 55px; height: 55px; border-radius: 20px; background: #eee; 
+            margin-right: 15px; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 20px; color: white; text-transform: uppercase;
+        }
+        .info { flex: 1; }
+        .name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+        .sub { font-size: 13px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+
+        /* --- Profile Screen --- */
+        .profile-container { padding: 40px 20px; text-align: center; }
+        .profile-img { 
+            width: 110px; height: 110px; border-radius: 40px; background: var(--primary); 
+            margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+            font-size: 40px; color: white; box-shadow: 0 8px 20px rgba(0,132,255,0.3);
+        }
+        .p-name { font-size: 24px; font-weight: 800; margin-bottom: 5px; }
+        .p-email { color: var(--text-sub); margin-bottom: 40px; }
+        .p-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: left; }
+        .logout-btn { 
+            width: 100%; padding: 15px; border-radius: 12px; background: #fff1f0; 
+            color: #ff4d4f; border: 1.5px solid #ffa39e; font-weight: 700;
+        }
+
+        /* --- Chat Screen --- */
+        #chat-screen { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh; 
+            background: white; z-index: 1000; display: flex; flex-direction: column;
+        }
+        .chat-header { 
+            padding: 10px 15px; display: flex; align-items: center; 
+            background: white; border-bottom: 1px solid #ddd;
+        }
+        .back-btn { font-size: 24px; margin-right: 15px; cursor: pointer; color: var(--primary); }
+        .chat-user-info { flex: 1; }
+        .msg-area { flex: 1; overflow-y: auto; padding: 20px; background: #f9f9fb; display: flex; flex-direction: column; }
+        .bubble { 
+            max-width: 80%; padding: 12px 16px; border-radius: 18px; margin-bottom: 10px; 
+            font-size: 15px; line-height: 1.5; word-wrap: break-word;
+        }
+        .sent { align-self: flex-end; background: var(--sent-bg); color: white; border-bottom-right-radius: 4px; }
+        .recv { align-self: flex-start; background: var(--recv-bg); color: var(--text-main); border-bottom-left-radius: 4px; }
+        
+        .chat-input { padding: 15px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #eee; }
+        .msg-inp { flex: 1; padding: 12px 20px; border: none; background: #f0f2f5; border-radius: 25px; outline: none; }
+        .send-btn { 
+            background: var(--primary); color: white; border: none; width: 45px; 
+            height: 45px; border-radius: 50%; font-size: 20px;
+        }
+
+        /* FAB */
+        .fab { 
+            position: fixed; bottom: 90px; right: 20px; width: 60px; height: 60px; 
+            background: var(--primary); border-radius: 20px; color: white; 
+            display: flex; align-items: center; justify-content: center; font-size: 30px;
+            box-shadow: 0 8px 20px rgba(0,132,255,0.4);
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Auth Screen -->
-    <div id="auth-screen" class="screen">
-        <h1 class="logo">ShweChat</h1>
-        <div class="auth-container">
-            <input type="text" id="reg-name" placeholder="Full Name (for register)" class="hidden">
-            <input type="email" id="auth-email" placeholder="Gmail Address">
-            <input type="password" id="auth-password" placeholder="Password">
-            <button id="btn-auth-main">Login</button>
-            <p id="auth-toggle">Don't have an account? Register</p>
+    <!-- ၁။ Login / Register Screen -->
+    <div id="auth-screen">
+        <div class="auth-card">
+            <div class="auth-logo">ShweChat</div>
+            <div class="auth-sub">Premium Messaging Experience</div>
+            
+            <input type="text" id="reg-name" class="auth-input hidden" placeholder="နာမည်အပြည့်အစုံ">
+            <input type="email" id="auth-email" class="auth-input" placeholder="Gmail လိပ်စာ">
+            <input type="password" id="auth-password" class="auth-input" placeholder="စကားဝှက် (Password)">
+            
+            <button id="btn-auth" class="auth-btn" onclick="handleAuth()">Login ဝင်မည်</button>
+            <div class="auth-toggle" onclick="toggleAuth()">အကောင့်မရှိသေးဘူးလား? <span>အသစ်ဖွင့်ပါ</span></div>
         </div>
     </div>
 
-    <!-- Main Screen (Tabs) -->
-    <div id="main-screen" class="screen hidden">
-        <div class="header">
-            <h2 id="header-title">ShweChat</h2>
-            <button id="btn-logout" class="icon-btn">Logout</button>
+    <!-- ၂။ Main App Screen -->
+    <div id="app-screen" class="app-container hidden">
+        <div class="app-header">
+            <h1 id="tab-title">Chats</h1>
+            <div style="font-size: 24px;">✨</div>
         </div>
 
-        <div id="content-area">
-            <!-- Dynamic Content Load Here -->
+        <div id="main-content" class="content-area">
+            <!-- Dynamic Content -->
         </div>
 
-        <!-- Bottom Navigation -->
         <div class="bottom-nav">
-            <div class="nav-item active" onclick="switchTab('chats')">CHATS</div>
-            <div class="nav-item" onclick="switchTab('friends')">FRIENDS</div>
-            <div class="nav-item" onclick="switchTab('profile')">PROFILE</div>
-        </div>
-    </div>
-
-    <!-- Chat Room Screen -->
-    <div id="chat-screen" class="screen hidden">
-        <div class="header">
-            <button onclick="backToMain()" class="icon-btn">←</button>
-            <h3 id="chat-user-name">Friend Name</h3>
-            <div class="call-icons">
-                <button onclick="triggerCall('voice')" class="icon-btn">📞</button>
-                <button onclick="triggerCall('video')" class="icon-btn">📷</button>
+            <div class="nav-item active" onclick="showTab('chats', this)">
+                <span class="nav-icon">💬</span><span class="nav-text">CHATS</span>
+            </div>
+            <div class="nav-item" onclick="showTab('friends', this)">
+                <span class="nav-icon">👥</span><span class="nav-text">FRIENDS</span>
+            </div>
+            <div class="nav-item" onclick="showTab('profile', this)">
+                <span class="nav-icon">👤</span><span class="nav-text">PROFILE</span>
             </div>
         </div>
-        <div id="message-list"></div>
-        <div class="input-area">
-            <input type="text" id="msg-input" placeholder="Type a message...">
-            <button id="btn-send">Send</button>
+    </div>
+
+    <!-- ၃။ Chat Room Screen -->
+    <div id="chat-screen" class="hidden">
+        <div class="chat-header">
+            <div class="back-btn" onclick="closeChat()">←</div>
+            <div class="avatar" id="c-avatar" style="width:40px; height:40px; border-radius:14px; font-size:16px;"></div>
+            <div class="chat-user-info">
+                <div id="c-name" style="font-weight:700;">Name</div>
+                <div style="font-size:11px; color:var(--primary);">Online</div>
+            </div>
+            <div style="display:flex; gap:20px; font-size:22px;">
+                <span onclick="makeCall('voice')" style="cursor:pointer">📞</span>
+                <span onclick="makeCall('video')" style="cursor:pointer">📷</span>
+            </div>
+        </div>
+        <div id="msg-list" class="msg-area"></div>
+        <div class="chat-input">
+            <input type="text" id="msg-inp" class="msg-inp" placeholder="စာရိုက်ပါ...">
+            <button class="send-btn" onclick="sendMsg()">➤</button>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- FAB for adding friends -->
+    <div id="fab-add" class="fab hidden" onclick="addFriend()">+</div>
+
+    <script>
+        // --- Firebase Config ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD355MSuzGQ70An7M7rdG8APTqk-xtgFoM",
+            authDomain: "shwechatmm.firebaseapp.com",
+            projectId: "shwechatmm",
+            storageBucket: "shwechatmm.firebasestorage.app",
+            messagingSenderId: "904518107602",
+            appId: "1:904518107602:android:89231af7657c3ded44880b"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let me = null;
+        let isLogin = true;
+        let activeFriend = null;
+
+        // --- Authentication ---
+        function toggleAuth() {
+            isLogin = !isLogin;
+            document.getElementById('reg-name').classList.toggle('hidden', isLogin);
+            document.getElementById('btn-auth').innerText = isLogin ? 'Login ဝင်မည်' : 'အကောင့်ဖွင့်မည်';
+            document.querySelector('.auth-toggle').innerHTML = isLogin ? 'အကောင့်မရှိသေးဘူးလား? <span>အသစ်ဖွင့်ပါ</span>' : 'အကောင့်ရှိပြီးသားလား? <span>Login ဝင်ပါ</span>';
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('auth-email').value.trim();
+            const pass = document.getElementById('auth-password').value;
+            const name = document.getElementById('reg-name').value.trim();
+
+            if(!email || !pass) return alert("ဖြည့်စွက်ပါ");
+
+            try {
+                if(isLogin) {
+                    await auth.signInWithEmailAndPassword(email, pass);
+                } else {
+                    if(!name) return alert("နာမည်ထည့်ပါ");
+                    const res = await auth.createUserWithEmailAndPassword(email, pass);
+                    await db.collection("Users").doc(res.user.uid).set({
+                        uid: res.user.uid, name: name, email: email, fcmToken: ""
+                    });
+                }
+            } catch(e) { alert(e.message); }
+        }
+
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                me = user;
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                showTab('chats', document.querySelector('.nav-item'));
+            } else {
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('app-screen').classList.add('hidden');
+            }
+        });
+
+        // --- Navigation ---
+        function showTab(tab, el) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('tab-title').innerText = tab.toUpperCase();
+            document.getElementById('fab-add').classList.toggle('hidden', tab !== 'friends');
+
+            if(tab === 'chats') renderChats();
+            else if(tab === 'friends') renderFriends();
+            else if(tab === 'profile') renderProfile();
+        }
+
+        // --- Chats List ---
+        function renderChats() {
+            const area = document.getElementById('main-content');
+            area.innerHTML = '<div class="list-card" id="chat-list"></div>';
+            
+            db.collection("Users").doc(me.uid).collection("RecentChats").orderBy("timestamp", "desc").onSnapshot(snap => {
+                const list = document.getElementById('chat-list');
+                if(!list) return;
+                list.innerHTML = snap.empty ? '<div style="padding:40px; text-align:center; color:#aaa;">စာပို့ထားဖူးသူမရှိပါ။</div>' : '';
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    list.innerHTML += `
+                        <div class="item" onclick="openChat('${d.uid}', '${d.name}')">
+                            <div class="avatar" style="background:#0084ff">${d.name[0]}</div>
+                            <div class="info">
+                                <div class="name">${d.name}</div>
+                                <div class="sub">${d.lastMsg || 'စကားပြောရန်နှိပ်ပါ'}</div>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        // --- Friends List ---
+        function renderFriends() {
+            const area = document.getElementById('main-content');
+            area.innerHTML = '<div class="list-card" id="friend-list"></div>';
+            
+            db.collection("Users").doc(me.uid).collection("Friends").onSnapshot(snap => {
+                const list = document.getElementById('friend-list');
+                if(!list) return;
+                list.innerHTML = snap.empty ? '<div style="padding:40px; text-align:center; color:#aaa;">သူငယ်ချင်းမရှိသေးပါ။ <br>+ ကိုနှိပ်ပြီးပေါင်းပါ။</div>' : '';
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    list.innerHTML += `
+                        <div class="item" onclick="openChat('${d.uid}', '${d.name}')">
+                            <div class="avatar" style="background:#44bd32">${d.name[0]}</div>
+                            <div class="info">
+                                <div class="name">${d.name}</div>
+                                <div class="sub">${d.email}</div>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        async function addFriend() {
+            const email = prompt("ပေါင်းထည့်လိုသူ၏ Gmail ရိုက်ထည့်ပါ:");
+            if(!email) return;
+            
+            const snap = await db.collection("Users").where("email", "==", email.trim()).get();
+            if(snap.empty) return alert("အသုံးပြုသူ ရှာမတွေ့ပါ။");
+            
+            const friend = snap.docs[0].data();
+            if(friend.uid === me.uid) return alert("ကိုယ့်ကိုယ်ကို ပေါင်း၍မရပါ။");
+
+            // ပေါင်းထည့်သူရော၊ အပေါင်းခံရသူရော နှစ်ဘက်စလုံးမှာ Friend စာရင်းထဲပေါ်အောင်လုပ်ခြင်း
+            const myInfo = (await db.collection("Users").doc(me.uid).get()).data();
+            
+            await db.collection("Users").doc(me.uid).collection("Friends").doc(friend.uid).set(friend);
+            await db.collection("Users").doc(friend.uid).collection("Friends").doc(me.uid).set(myInfo);
+            
+            alert("ပေါင်းထည့်ပြီးပါပြီ။");
+        }
+
+        // --- Profile ---
+        async function renderProfile() {
+            const area = document.getElementById('main-content');
+            const doc = await db.collection("Users").doc(me.uid).get();
+            const d = doc.data();
+
+            area.innerHTML = `
+                <div class="profile-container">
+                    <div class="profile-img">${d.name[0]}</div>
+                    <div class="p-name">${d.name}</div>
+                    <div class="p-email">${d.email}</div>
+                    
+                    <div class="p-card">
+                        <div style="color:var(--text-sub); font-size:12px;">User ID</div>
+                        <div style="font-weight:700; font-size:13px;">${d.uid}</div>
+                    </div>
+
+                    <button class="logout-btn" onclick="auth.signOut()">Logout ထွက်မည်</button>
+                </div>
+            `;
+        }
+
+        // --- Chat Logic ---
+        function openChat(uid, name) {
+            activeFriend = { uid, name };
+            document.getElementById('chat-screen').classList.remove('hidden');
+            document.getElementById('c-name').innerText = name;
+            document.getElementById('c-avatar').innerText = name[0];
+            
+            const roomId = me.uid > uid ? me.uid + "_" + uid : uid + "_" + me.uid;
+            db.collection("Chats").doc(roomId).collection("Messages").orderBy("timestamp", "asc").onSnapshot(snap => {
+                const list = document.getElementById('msg-list');
+                list.innerHTML = '';
+                snap.forEach(doc => {
+                    const m = doc.data();
+                    const cls = m.senderId === me.uid ? 'sent' : 'recv';
+                    list.innerHTML += `<div class="bubble ${cls}">${m.message}</div>`;
+                });
+                list.scrollTop = list.scrollHeight;
+            });
+        }
+
+        async function sendMsg() {
+            const inp = document.getElementById('msg-inp');
+            const msg = inp.value.trim();
+            if(!msg || !activeFriend) return;
+
+            const roomId = me.uid > activeFriend.uid ? me.uid + "_" + activeFriend.uid : activeFriend.uid + "_" + me.uid;
+            const time = Date.now();
+            
+            await db.collection("Chats").doc(roomId).collection("Messages").add({
+                senderId: me.uid, message: msg, timestamp: time
+            });
+
+            // Update Recent Chats
+            const myInfo = (await db.collection("Users").doc(me.uid).get()).data();
+            const friendInfo = (await db.collection("Users").doc(activeFriend.uid).get()).data();
+
+            await db.collection("Users").doc(me.uid).collection("RecentChats").doc(activeFriend.uid).set({...friendInfo, lastMsg: msg, timestamp: time});
+            await db.collection("Users").doc(activeFriend.uid).collection("RecentChats").doc(me.uid).set({...myInfo, lastMsg: msg, timestamp: time});
+
+            // Native Noti Bridge
+            if(window.Android) {
+                window.Android.sendNoti(friendInfo.fcmToken || "", myInfo.name, msg);
+            }
+            
+            inp.value = '';
+        }
+
+        function closeChat() { document.getElementById('chat-screen').classList.add('hidden'); }
+
+        function makeCall(type) {
+            if(window.Android && activeFriend) {
+                window.Android.startCall(activeFriend.uid, type, activeFriend.name);
+            } else { alert("Calling works in Native App only"); }
+        }
+    </script>
 </body>
 </html>
