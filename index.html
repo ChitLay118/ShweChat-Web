@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ShweChat Web</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDK v8 (Maximum Compatibility) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="screen">
+        <h1 class="logo">ShweChat</h1>
+        <div class="auth-container">
+            <input type="text" id="reg-name" placeholder="Full Name (for register)" class="hidden">
+            <input type="email" id="auth-email" placeholder="Gmail Address">
+            <input type="password" id="auth-password" placeholder="Password">
+            <button id="btn-auth-main">Login</button>
+            <p id="auth-toggle">Don't have an account? Register</p>
+        </div>
+    </div>
+
+    <!-- Main Screen (Tabs) -->
+    <div id="main-screen" class="screen hidden">
+        <div class="header">
+            <h2 id="header-title">ShweChat</h2>
+            <button id="btn-logout" class="icon-btn">Logout</button>
+        </div>
+
+        <div id="content-area">
+            <!-- Dynamic Content Load Here -->
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchTab('chats')">CHATS</div>
+            <div class="nav-item" onclick="switchTab('friends')">FRIENDS</div>
+            <div class="nav-item" onclick="switchTab('profile')">PROFILE</div>
+        </div>
+    </div>
+
+    <!-- Chat Room Screen -->
+    <div id="chat-screen" class="screen hidden">
+        <div class="header">
+            <button onclick="backToMain()" class="icon-btn">←</button>
+            <h3 id="chat-user-name">Friend Name</h3>
+            <div class="call-icons">
+                <button onclick="triggerCall('voice')" class="icon-btn">📞</button>
+                <button onclick="triggerCall('video')" class="icon-btn">📷</button>
+            </div>
+        </div>
+        <div id="message-list"></div>
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="Type a message...">
+            <button id="btn-send">Send</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
